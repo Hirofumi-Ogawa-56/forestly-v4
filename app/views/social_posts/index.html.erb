@@ -1,0 +1,314 @@
+<!-- app/views/posts/index.html.erb -->
+<% content_for :sidebar do %>
+  <%= render 'social_posts/sidebar' %>
+<% end %>
+
+<% my_current_profile = current_profile %>
+
+<style>
+  main { overflow: hidden !important; height: 100% !important; }
+  main > div { padding: 0 !important; max-width: none !important; height: 100% !important; }
+  
+  .slack-scrollbar::-webkit-scrollbar { width: 8px; }
+  .slack-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .slack-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+
+  .chat-layout-container { display: flex; width: 100%; height: 100%; overflow: hidden; }
+  .main-chat-area { flex: 1; display: flex; flex-direction: column; min-width: 0; transition: all 0.2s ease-in-out; }
+  #thread_panel { width: 0; background: white; display: none; flex-direction: column; border-left: 1px solid #e5e7eb; transition: width 0.2s ease-in-out; }
+  #thread_panel.show { width: 450px; display: flex; }
+  .chat-input-container { overflow: visible !important; }
+  .draft-dropdown { z-index: 100; }
+</style>
+
+<div class="chat-layout-container" id="social_container" data-open-thread-id="<%= params[:thread_id] %>">
+  
+  <div class="main-chat-area">
+    <header class="flex-shrink-0 h-16 px-6 border-b border-gray-200 flex justify-between items-center bg-white z-10 shadow-sm">
+      <div class="flex items-center gap-3">
+        <div class="h-8 w-8 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 font-bold">S</div>
+        <h2 class="font-black text-gray-900 text-lg">
+          <%= case params[:filter]
+              when 'team' then 'チームのタイムライン'
+              when 'mine' then '自分の投稿'
+              when 'draft' then '下書き一覧'
+              else '全ての投稿'
+              end %>
+        </h2>
+      </div>
+    </header>
+
+    <div class="flex-1 overflow-y-auto bg-white slack-scrollbar" id="messages_area">
+      <div class="py-6">
+        <% if @no_team_scoped %>
+          <div class="flex flex-col items-center justify-center py-20 px-6 text-center">
+            <h3 class="text-lg font-bold text-gray-900 mb-2">チームに所属していません</h3>
+            <%= link_to "チームを作成する", new_team_path, class: "px-4 py-2 bg-[#00a968] text-white rounded-md text-sm font-bold" %>
+          </div>
+        <% else %>
+          <% @activities.each do |activity| %>
+            <div class="flex items-start px-6 py-2 hover:bg-gray-50 transition-colors group relative border-b border-gray-50 last:border-0">
+              <div class="flex-shrink-0 mr-4 mt-1">
+                <%= profile_avatar_tag(activity.owner_profile, class: "h-10 w-10 rounded shadow-sm", size: 40) %>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-baseline gap-2 mb-0.5">
+                  <span class="font-black text-gray-900 text-[15px]"><%= activity.owner_profile.name %></span>
+                  <span class="text-[11px] text-gray-400"><%= activity.created_at.strftime("%H:%M") %></span>
+                </div>
+                <div class="text-gray-800 text-[15px] leading-relaxed break-words">
+                  <%# リポスト表示ロジック %>
+                  <% if activity.actable.is_a?(SocialRepost) %>
+                    <% if activity.actable.content.present? %>
+                      <div class="mb-2"><%= simple_format(activity.actable.content, {}, wrapper_tag: "span") %></div>
+                    <% end %>
+                    <div class="border border-gray-200 rounded-lg p-3 bg-gray-50 mt-1 mb-1">
+                      <% if activity.actable.source_post.present? %>
+                        <span class="font-bold text-xs text-gray-700"><%= activity.actable.source_post.owner_profile.name %></span>
+                        <div class="text-sm text-gray-600"><%= simple_format(activity.actable.source_post.content, {}, wrapper_tag: "span") %></div>
+                      <% else %>
+                        <span class="text-xs italic text-gray-400">削除された投稿</span>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <%= simple_format(activity.actable.content, {}, wrapper_tag: "span") %>
+                  <% end %>
+                </div>
+
+                <div class="mt-2 flex items-center gap-3">
+                <%# Likeボタン %>
+                <% user_liked = activity.like_activities.exists?(owner_profile: my_current_profile) %>
+                <%= button_to activity_likes_path(activity), method: :post, 
+                    class: "flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all #{user_liked ? 'bg-pink-50 border-pink-200 text-pink-500' : 'bg-gray-50 border-gray-100 text-gray-400 hover:border-gray-300'}" do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 <%= 'fill-current' if user_liked %>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                    </svg>
+                    <% if activity.likes_count > 0 %>
+                    <span class="text-[11px] font-bold"><%= activity.likes_count %></span>
+                    <% end %>
+                <% end %>
+
+                <%# 返信（スレッド）ボタン %>
+                <button type="button" onclick="openSocialThread('<%= activity.id %>', '<%= activity.actable_id %>')" class="flex items-center gap-1 group/reply text-gray-400 hover:text-blue-500 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                    </svg>
+                    <span class="text-[11px] font-bold">
+                    <%= activity.comments_count > 0 ? "#{activity.comments_count} 件の返信を表示" : "返信" %>
+                    </span>
+                </button>
+                </div>
+              </div>
+
+              <%# ホバーアクション（リポスト・編集） %>
+              <div class="absolute right-6 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                <button type="button" onclick="setRepostMode('<%= activity.actable.id %>', '<%= j (activity.actable.is_a?(SocialRepost) ? activity.actable.source_post.content : activity.actable.content).truncate(30) %>', '<%= activity.owner_profile.name %>')" class="p-1.5 bg-white border border-gray-200 rounded shadow-sm text-gray-500">♻️</button>
+                <% if activity.owner_profile == my_current_profile %>
+                  <button type="button" onclick="setEditMode('<%= activity.actable.id %>', '<%= j activity.actable.content %>', '<%= activity.visibility_range %>')" class="p-1.5 bg-white border border-gray-200 rounded shadow-sm text-gray-500">✏️</button>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <%# --- 復活：下書き対応・高機能フッター --- %>
+    <footer class="flex-shrink-0 px-6 py-4 border-t border-gray-100 bg-white">
+      <%= form_with(model: SocialPost.new, url: social_posts_path(filter: params[:filter]), id: "chat_form", class: "relative") do |f| %>
+        <input type="hidden" name="post_id" id="editing_message_id" value="">
+        <input type="hidden" name="source_post_id" id="repost_source_id" value="">
+        <input type="hidden" name="commit_type" id="commit_type" value="publish">
+        
+        <div id="edit_label" class="hidden text-[11px] font-bold text-[#00a968] mb-1">編集/下書き再開中 (Escで解除)</div>
+        <div id="reply_preview" class="hidden flex items-center justify-between mb-2 p-2 bg-blue-50 border border-blue-100 rounded text-[11px] text-blue-700">
+          <span class="font-bold truncate">💬 <span id="reply_user_name"></span> さんに返信中</span>
+          <button type="button" onclick="clearReplyMode()" class="text-blue-500 font-black">×</button>
+        </div>
+        <div id="repost_preview" class="hidden flex items-center justify-between mb-2 p-2 bg-emerald-50 border border-emerald-100 rounded text-[11px] text-emerald-700">
+          <span class="font-bold truncate">♻️ <span id="repost_user_name"></span> さんのポストをリポスト中</span>
+          <button type="button" onclick="clearRepostMode()" class="text-emerald-500 font-black">×</button>
+        </div>
+
+        <div class="border-2 border-gray-200 rounded-lg focus-within:border-[#00a968] bg-white chat-input-container">
+          <%= f.text_area :content, placeholder: "今の気持ちをシェアしましょう", rows: 1, class: "block w-full border-none focus:ring-0 py-3 px-4 text-[15px] resize-none", id: "message_textarea" %>
+          
+          <div class="flex items-center justify-between px-2 py-1.5 bg-gray-50 border-t border-gray-100">
+            <div class="flex items-center gap-4 text-[10px] text-gray-400 font-bold">
+              <label class="cursor-pointer"><%= radio_button_tag :visibility_range, :is_public, true %> 公開</label>
+              <label class="cursor-pointer"><%= radio_button_tag :visibility_range, :is_team, false, disabled: my_current_profile.team_id.blank? %> チーム</label>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <%# 下書きトレイ %>
+                <% my_drafts = Activity.where(actable_type: 'SocialPost', owner_profile: my_current_profile).draft.order(updated_at: :desc) %>
+                <details class="relative group">
+                <summary class="list-none cursor-pointer px-2 py-1 hover:bg-gray-200 rounded text-[10px] text-gray-600 font-bold flex items-center gap-1">
+                    <span>下書きトレイ</span>
+                    <span class="bg-gray-300 text-white px-1.5 rounded-full"><%= my_drafts.count %></span>
+                </summary>
+                <div class="absolute bottom-full right-0 mb-2 w-72 bg-white border border-gray-200 shadow-xl rounded-lg py-2 draft-dropdown">
+                    <div class="px-3 py-1 border-b border-gray-50 text-[9px] font-bold text-gray-400 uppercase tracking-wider">保存済みの下書き</div>
+                    <div class="max-h-60 overflow-y-auto slack-scrollbar">
+                    <% if my_drafts.any? %>
+                        <% my_drafts.each do |draft| %>
+                        <div class="px-3 py-2 hover:bg-emerald-50 border-b border-gray-50 last:border-0 flex justify-between items-start gap-2 group/draft">
+                            <div class="flex-1 min-w-0">
+                            <p class="text-[12px] text-gray-600 truncate leading-tight"><%= draft.actable.content.presence || "(本文なし)" %></p>
+                            <p class="text-[9px] text-gray-400 mt-0.5"><%= draft.updated_at.strftime("%m/%d %H:%M") %></p>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                            <%# 再開ボタン %>
+                            <button type="button" 
+                                    onclick="setEditMode('<%= draft.actable_id %>', '<%= j draft.actable.content %>', '<%= draft.visibility_range %>')" 
+                                    class="text-[10px] text-[#00a968] font-bold hover:underline">再開</button>
+                            
+                            <%# 削除（アーカイブ）ボタン：Activityを消す、またはstatusを更新する設計に合わせる %>
+                            <%= link_to social_post_path(draft.actable), 
+                                        data: { turbo_method: :delete, turbo_confirm: "この下書きを削除しますか？" }, 
+                                        class: "text-gray-300 hover:text-red-500 transition-colors" do %>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            <% end %>
+                            </div>
+                        </div>
+                        <% end %>
+                    <% else %>
+                        <div class="px-3 py-4 text-center text-xs text-gray-400 font-medium">下書きはありません</div>
+                    <% end %>
+                    </div>
+                </div>
+                </details>
+
+              <button type="button" onclick="submitAsDraft()" class="text-[10px] text-gray-500 font-bold px-2 py-1 hover:bg-gray-200 rounded">下書き保存</button>
+              <%= f.button type: :submit, class: "p-1.5 text-[#00a968] hover:bg-emerald-50 rounded-md" do %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 19l9-2-9-18-9 18 9 2zm0 0v-8" /></svg>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </footer>
+  </div>
+
+  <div id="thread_panel" class="flex-shrink-0">
+    <header class="h-16 px-6 border-b border-gray-200 flex justify-between items-center bg-gray-50 shrink-0">
+      <h3 class="font-black text-gray-900">スレッド</h3>
+      <button onclick="closeSocialThread()" class="text-gray-400 hover:text-gray-600 font-black">×</button>
+    </header>
+    <div id="thread_content" class="flex-1 overflow-y-auto p-4 bg-white"></div>
+  </div>
+</div>
+
+<script>
+  function adjustTextareaHeight(el) { if(el){ el.style.height='auto'; el.style.height=el.scrollHeight+'px'; } }
+
+  // --- モード管理 ---
+  function clearEditMode() {
+    document.getElementById('editing_message_id').value = "";
+    document.getElementById('edit_label').classList.add('hidden');
+    document.getElementById('message_textarea').value = "";
+  }
+  function clearRepostMode() {
+    document.getElementById('chat_form').action = "<%= social_posts_path(filter: params[:filter]) %>";
+    document.getElementById('repost_source_id').value = "";
+    document.getElementById('repost_preview').classList.add('hidden');
+  }
+  function clearReplyMode() {
+    document.getElementById('chat_form').action = "<%= social_posts_path(filter: params[:filter]) %>";
+    document.getElementById('reply_preview').classList.add('hidden');
+  }
+
+  function setEditMode(id, content, visibility) {
+    clearRepostMode(); clearReplyMode();
+    const textarea = document.getElementById('message_textarea');
+    document.getElementById('editing_message_id').value = id;
+    textarea.value = content;
+    document.getElementById('edit_label').classList.remove('hidden');
+    const radio = document.querySelector(`input[name="visibility_range"][value="${visibility}"]`);
+    if(radio) radio.checked = true;
+    textarea.focus(); adjustTextareaHeight(textarea);
+  }
+
+  function setRepostMode(id, text, userName) {
+    clearEditMode(); clearReplyMode();
+    const form = document.getElementById('chat_form');
+    form.action = `/social_posts/${id}/repost`;
+    document.getElementById('repost_source_id').value = id;
+    document.getElementById('repost_user_name').innerText = userName;
+    document.getElementById('repost_preview').classList.remove('hidden');
+    document.getElementById('message_textarea').focus();
+  }
+
+  function setReplyMode(activityId, userName) {
+    clearEditMode(); clearRepostMode();
+    const form = document.getElementById('chat_form');
+    form.action = `/activities/${activityId}/comments`;
+    document.getElementById('reply_user_name').innerText = userName;
+    document.getElementById('reply_preview').classList.remove('hidden');
+    document.getElementById('message_textarea').focus();
+  }
+
+  function submitAsDraft() {
+    document.getElementById('commit_type').value = "draft";
+    document.getElementById('chat_form').requestSubmit();
+  }
+
+  // --- スレッド操作 ---
+  async function openSocialThread(activityId, postId) {
+    const panel = document.getElementById('thread_panel');
+    const content = document.getElementById('thread_content');
+    panel.classList.add('show');
+    content.innerHTML = '<div class="text-center py-10 text-xs text-gray-400">Loading...</div>';
+    try {
+      const response = await fetch(`/social_posts/${postId}/thread`);
+      content.innerHTML = await response.text();
+      setReplyMode(activityId, "スレッド");
+      const url = new URL(window.location);
+      url.searchParams.set('thread_id', activityId);
+      window.history.replaceState({}, '', url);
+    } catch (e) { content.innerHTML = 'Error'; }
+  }
+
+  function closeSocialThread() {
+    document.getElementById('thread_panel').classList.remove('show');
+    clearReplyMode();
+    const url = new URL(window.location);
+    url.searchParams.delete('thread_id');
+    window.history.replaceState({}, '', url);
+  }
+
+  // --- 初期化 (二重登録防止) ---
+  function initSocial() {
+    const form = document.getElementById('chat_form');
+    const textarea = document.getElementById('message_textarea');
+    if (!form || !textarea) return;
+
+    // スレッド自動再開
+    const container = document.getElementById('social_container');
+    const openThreadId = container?.dataset.openThreadId;
+    if (openThreadId) {
+      const btn = document.querySelector(`button[onclick*="openSocialThread('${openThreadId}'"]`);
+      if (btn) { btn.click(); container.dataset.openThreadId = ""; }
+    }
+
+    const newTextarea = textarea.cloneNode(true);
+    textarea.parentNode.replaceChild(newTextarea, textarea);
+
+    newTextarea.addEventListener('input', function() { adjustTextareaHeight(this); });
+    newTextarea.addEventListener('keydown', function(e) {
+      if (e.isComposing) return;
+      if (e.key === 'Enter' && e.shiftKey) {
+        e.preventDefault();
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if(submitBtn) submitBtn.disabled = true;
+        form.requestSubmit();
+      }
+      if (e.key === 'Escape') { clearEditMode(); clearRepostMode(); clearReplyMode(); closeSocialThread(); }
+    });
+  }
+
+  document.addEventListener("turbo:load", initSocial);
+  if (document.readyState !== "loading") initSocial();
+</script>

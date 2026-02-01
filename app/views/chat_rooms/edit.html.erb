@@ -1,0 +1,168 @@
+<!-- app/views/chat_rooms/edit.html.erb -->
+<%# 通知メッセージの表示（alertも追加） %>
+<div class="space-y-4 mb-4">
+  <% if flash[:notice] %>
+    <div class="p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">
+      <%= flash[:notice] %>
+    </div>
+  <% end %>
+  <% if flash[:alert] %>
+    <div class="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+      <%= flash[:alert] %>
+    </div>
+  <% end %>
+</div>
+
+<% content_for :sidebar do %>
+  <%= render 'sidebar' %>
+<% end %>
+
+<div class="max-w-2xl mx-auto">
+  <div class="pb-5 border-b border-gray-200 mb-6 flex justify-between items-end">
+    <h3 class="text-lg leading-6 font-medium text-gray-900">ルーム設定とメンバー管理</h3>
+    <%= link_to "ルームへ戻る", chat_room_path(@chat_room), class: "text-sm text-[#00a968] hover:underline" %>
+  </div>
+
+  <%# ルーム基本設定の編集（ここはそのまま） %>
+    <section class="mb-10 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+    <h4 class="text-sm font-bold text-gray-400 mb-4 uppercase tracking-wider">基本設定</h4>
+    <%= form_with(model: @chat_room, class: "space-y-6") do |f| %>
+        
+        <%# アイコン変更エリア %>
+        <div class="flex flex-col items-center py-4 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+        <div id="icon-preview-container" 
+            onclick="document.getElementById('chat-room-avatar-input').click();" 
+            class="relative cursor-pointer group">
+            
+            <%# 現在のアイコンまたはプレースホルダーを表示 %>
+            <div id="icon-current-display">
+            <% if @chat_room.avatar.attached? %>
+                <%= image_tag @chat_room.avatar, id: "current-image", class: "w-[120px] h-[120px] rounded-xl object-cover shadow-sm" %>
+            <% else %>
+                <div class="w-[120px] h-[120px] bg-gray-200 rounded-xl flex items-center justify-center text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                </svg>
+                </div>
+            <% end %>
+            </div>
+
+            <%# プレビュー用の隠しimgタグ %>
+            <img id="image-preview" src="#" alt="Preview" 
+                style="display: none; width: 120px; height: 120px; border-radius: 0.75rem; object-fit: cover;">
+            
+            <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <span class="text-xs text-white bg-black/50 px-2 py-1 rounded">画像を変更</span>
+            </div>
+        </div>
+        
+        <%= f.file_field :avatar, id: "chat-room-avatar-input", accept: 'image/*', onchange: "previewImage(this);", class: "hidden" %>
+        <p class="text-[10px] text-gray-500 mt-2">クリックしてルームアイコンを変更</p>
+        </div>
+
+        <div>
+        <%= f.label :display_name, "ルーム名", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :display_name, class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-[#00a968] focus:border-[#00a968]" %>
+        </div>
+
+        <div class="flex justify-end">
+        <%= f.submit "変更を保存", class: "px-4 py-2 text-sm font-medium text-white bg-[#00a968] rounded-md hover:bg-[#008f58] transition-colors" %>
+        </div>
+    <% end %>
+    </section>
+
+  <%# メンバー追加セクション（チーム機能を参考に上書き） %>
+  <div class="mb-10 pt-8 border-t border-gray-200">
+    <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+      <div class="p-6">
+        <h4 class="text-lg font-bold text-gray-900 mb-1">メンバーを直接追加</h4>
+        <p class="text-sm text-gray-500 mb-6">プロフィールIDを入力して、即座にメンバーとして追加します。</p>
+
+        <%= form_with url: chat_room_room_memberships_path(@chat_room), method: :post, class: "flex flex-col gap-4" do |f| %>
+          <div class="flex flex-col sm:flex-row gap-4">
+            <div class="flex-grow">
+              <%= f.text_field :profile_id, 
+                  placeholder: "例: ajnz6dem", 
+                  class: "block w-full border-gray-300 rounded-xl shadow-sm focus:ring-[#00a968] focus:border-[#00a968] py-3 text-sm font-mono uppercase" %>
+            </div>
+            
+            <div class="flex items-center gap-4 px-2">
+              <label class="inline-flex items-center cursor-pointer">
+                <%= f.radio_button :role, "member", checked: true, class: "text-[#00a968] focus:ring-[#00a968]" %>
+                <span class="ml-2 text-sm text-gray-600">一般</span>
+              </label>
+              <label class="inline-flex items-center cursor-pointer">
+                <%= f.radio_button :role, "admin", class: "text-[#00a968] focus:ring-[#00a968]" %>
+                <span class="ml-2 text-sm text-gray-600">管理者</span>
+              </label>
+            </div>
+
+            <%= f.submit "追加を実行", class: "px-6 py-3 bg-[#00a968] text-white font-bold rounded-xl hover:bg-[#008f58] transition-colors cursor-pointer" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <%# 参加メンバーリスト（上書き） %>
+  <section class="bg-white shadow overflow-hidden rounded-2xl border border-gray-200">
+    <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+      <h4 class="text-sm font-bold text-gray-700">現在の参加メンバー</h4>
+    </div>
+    <ul role="list" class="divide-y divide-gray-200">
+      <% @chat_room.room_memberships.includes(:profile).each do |membership| %>
+        <li class="px-4 py-4 flex items-center hover:bg-gray-50 transition-colors">
+          <div class="min-w-0 flex-1 flex items-center">
+            <div class="flex-shrink-0">
+              <%# 既存のヘルパー profile_avatar_tag を利用 %>
+              <%= profile_avatar_tag(membership.profile, class: "h-10 w-10 border border-gray-100", size: 40) %>
+            </div>
+            <div class="min-w-0 flex-1 px-4 flex items-center justify-between">
+              <div>
+                <p class="text-sm font-bold text-[#00a968] truncate"><%= membership.profile.name %></p>
+                <p class="text-[10px] text-gray-400 font-mono italic">ID: <%= membership.profile.profile_id %></p>
+              </div>
+              <div>
+                <% if membership.admin? %>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">管理者</span>
+                <% else %>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">一般</span>
+                <% end %>
+              </div>
+            </div>
+          </div>
+          
+          <%# 自分自身は解除できないように制御 %>
+          <% if membership.profile != current_profile %>
+            <div class="ml-4">
+              <%= button_to chat_room_room_membership_path(@chat_room, membership), 
+                            method: :delete, 
+                            data: { confirm: "#{membership.profile.name}さんをルームから解除しますか？" },
+                            class: "text-gray-400 hover:text-red-500 transition-colors" do %>
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              <% end %>
+            </div>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+</div>
+
+<script>
+  function previewImage(input) {
+    const preview = document.getElementById('image-preview');
+    const currentDisplay = document.getElementById('icon-current-display');
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        currentDisplay.style.display = 'none';
+      }
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+</script>

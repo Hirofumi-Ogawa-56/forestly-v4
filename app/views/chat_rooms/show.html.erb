@@ -1,0 +1,268 @@
+<!-- app/views/chat_rooms/shw.html.erb -->
+<% content_for :sidebar do %>
+  <%= render 'sidebar' %>
+<% end %>
+
+<% my_current_profile = current_profile %>
+
+<style>
+  main { overflow: hidden !important; height: 100% !important; }
+  main > div { padding: 0 !important; max-width: none !important; height: 100% !important; }
+  
+  .slack-scrollbar::-webkit-scrollbar { width: 8px; }
+  .slack-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .slack-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+  
+  .chat-layout-container { display: flex; width: 100%; height: 100%; overflow: hidden; }
+  .main-chat-area { flex: 1; display: flex; flex-direction: column; min-width: 0; transition: all 0.2s ease-in-out; }
+
+  #thread_panel {
+    width: 0; background: white; display: none; flex-direction: column; border-left: 1px solid #e5e7eb; transition: width 0.2s ease-in-out;
+  }
+  #thread_panel.show { width: 400px; display: flex; }
+  .draft-dropdown { z-index: 100; }
+</style>
+
+<div class="chat-layout-container" id="chat_container" data-open-thread-id="<%= params[:thread_id] %>">
+  <div class="main-chat-area">
+    <header class="flex-shrink-0 h-16 px-6 border-b border-gray-200 flex justify-between items-center bg-white z-10">
+      <div class="flex items-center gap-3">
+        <%= profile_avatar_tag(@chat_room, class: "h-8 w-8 rounded-lg object-cover", size: 32) %>
+        <h2 class="font-black text-gray-900 text-lg truncate"><%= @chat_room.display_name %></h2>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-gray-400 mr-2 font-medium"><%= @chat_room.profiles.count %> 人のメンバー</span>
+        <%= link_to edit_chat_room_path(@chat_room), class: "p-2 hover:bg-gray-100 rounded-full text-gray-500" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        <% end %>
+      </div>
+    </header>
+
+    <div class="flex-1 overflow-y-auto bg-white slack-scrollbar" id="messages_area">
+      <div class="py-6">
+        <% @chat_room.activities.room_messages.active.includes(:owner_profile, :actable).order(created_at: :asc).each do |activity| %>
+          <% if activity.actable_type == 'RoomMessage' %>
+            <% message = activity.actable %>
+            <div class="flex items-start px-6 py-2 hover:bg-gray-50 transition-colors group relative">
+              <div class="flex-shrink-0 mr-4 mt-1">
+                <%= profile_avatar_tag(activity.owner_profile, class: "h-10 w-10 rounded shadow-sm", size: 40) %>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-baseline gap-2 mb-0.5">
+                  <span class="font-black text-gray-900 text-[15px]"><%= activity.owner_profile.name %></span>
+                  <span class="text-[11px] text-gray-400 font-medium"><%= activity.created_at.strftime("%H:%M") %></span>
+                </div>
+                <div class="text-gray-800 text-[15px] leading-relaxed break-words">
+                  <%= simple_format(message.content, {}, wrapper_tag: "span") %>
+                </div>
+
+                <div class="flex items-center gap-3 mt-2">
+                  <% user_liked = activity.like_activities.exists?(owner_profile: my_current_profile) %>
+                  <%= button_to activity_likes_path(activity), method: :post, 
+                      class: "flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all #{user_liked ? 'bg-pink-50 border-pink-200 text-pink-500' : 'bg-gray-50 border-gray-100 text-gray-400 hover:border-gray-300'}" do %>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 <%= 'fill-current' if user_liked %>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
+                      <% if (count = activity.like_activities.count) > 0 %><span class="text-[11px] font-bold"><%= count %></span><% end %>
+                  <% end %>
+
+                  <button onclick="openThread('<%= activity.id %>', '<%= message.id %>')" class="flex items-center gap-1 group/reply text-gray-400 hover:text-blue-500 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+                    <span class="text-[11px] font-bold"><%= (c = activity.comment_activities.count) > 0 ? "#{c} 件の返信を表示" : "返信" %></span>
+                  </button>
+                </div>
+              </div>
+              
+              <%# 編集用ホバーアクション（Socialと同じ仕様で追加） %>
+              <% if activity.owner_profile == my_current_profile %>
+                <div class="absolute right-6 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button type="button" onclick="setEditMode('<%= message.id %>', '<%= j message.content %>')" class="p-1.5 bg-white border border-gray-200 rounded shadow-sm text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                  </button>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <footer class="flex-shrink-0 px-6 py-4 border-t border-gray-100 bg-white">
+      <%= form_with(model: [@chat_room, RoomMessage.new], id: "chat_form") do |f| %>
+        <input type="hidden" name="message_id" id="editing_message_id" value="">
+        <input type="hidden" name="commit_type" id="commit_type" value="publish">
+        <input type="hidden" name="parent_activity_id" id="parent_activity_id" value="">
+        
+        <div id="edit_label" class="hidden text-[11px] font-bold text-[#00a968] mb-1 px-1 text-xs">編集/下書き再開中 (Escで解除)</div>
+        <div id="reply_preview" class="hidden flex items-center justify-between mb-2 p-2 bg-blue-50 border border-blue-100 rounded text-[11px] text-blue-700">
+          <span class="truncate">💬 <span id="reply_user_name"></span> へのスレッドに返信中</span>
+          <button type="button" onclick="clearReplyMode()" class="text-blue-500 font-bold hover:text-blue-700">×</button>
+        </div>
+
+        <div class="border-2 border-gray-200 rounded-lg focus-within:border-[#00a968] transition-all bg-white shadow-sm">
+          <%= f.text_area :content, placeholder: "メッセージを入力...", rows: 1, id: "message_textarea", class: "block w-full border-none focus:ring-0 py-3 px-4 text-[15px] resize-none min-h-[44px]" %>
+          <div class="flex items-center justify-between px-2 py-1.5 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400">
+            <span class="px-2"><strong>Shift + Enter</strong> で送信 / <strong>Esc</strong> で解除</span>
+            
+            <div class="flex items-center gap-2">
+              <%# 下書きトレイ（Socialから移植） %>
+              <% my_drafts = Activity.where(actable_type: 'RoomMessage', owner_profile: my_current_profile).draft.order(updated_at: :desc) %>
+              <details class="relative group">
+                <summary class="list-none cursor-pointer px-2 py-1 hover:bg-gray-200 rounded text-[10px] text-gray-600 font-bold flex items-center gap-1">
+                  <span>下書き</span>
+                  <span class="bg-gray-300 text-white px-1.5 rounded-full"><%= my_drafts.count %></span>
+                </summary>
+                <div class="absolute bottom-full right-0 mb-2 w-72 bg-white border border-gray-200 shadow-xl rounded-lg py-2 draft-dropdown">
+                  <div class="px-3 py-1 border-b border-gray-50 text-[9px] font-bold text-gray-400 uppercase tracking-wider">保存済みの下書き</div>
+                  <div class="max-h-60 overflow-y-auto slack-scrollbar">
+                    <% if my_drafts.any? %>
+                      <% my_drafts.each do |draft| %>
+                        <div class="px-3 py-2 hover:bg-emerald-50 border-b border-gray-50 last:border-0 flex justify-between items-start gap-2">
+                          <div class="flex-1 min-w-0 text-left">
+                            <p class="text-[12px] text-gray-600 truncate leading-tight font-medium"><%= draft.actable.content.presence || "(本文なし)" %></p>
+                            <p class="text-[9px] text-gray-400 mt-0.5"><%= draft.updated_at.strftime("%m/%d %H:%M") %></p>
+                          </div>
+                          <div class="flex items-center gap-2 shrink-0">
+                            <button type="button" onclick="setEditMode('<%= draft.actable_id %>', '<%= j draft.actable.content %>')" class="text-[10px] text-[#00a968] font-bold hover:underline">再開</button>
+                            <%= link_to chat_room_room_message_path(@chat_room, draft.actable), data: { turbo_method: :delete, turbo_confirm: "下書きを削除しますか？" }, class: "text-gray-300 hover:text-red-500 transition-colors" do %>
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            <% end %>
+                          </div>
+                        </div>
+                      <% end %>
+                    <% else %>
+                      <div class="px-3 py-4 text-center text-xs text-gray-400 font-medium">下書きなし</div>
+                    <% end %>
+                  </div>
+                </div>
+              </details>
+
+              <button type="button" onclick="submitAsDraft()" class="text-[10px] text-gray-500 font-bold px-2 py-1 hover:bg-gray-200 rounded transition-colors">下書き保存</button>
+              <button type="submit" class="p-1.5 text-[#00a968] hover:bg-emerald-50 rounded-md transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9-2-9-18-9 18 9 2zm0 0v-8" /></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </footer>
+  </div>
+
+  <div id="thread_panel" class="flex-shrink-0">
+    <header class="h-16 px-6 border-b border-gray-200 flex justify-between items-center bg-gray-50 shrink-0">
+      <h3 class="font-black text-gray-900">スレッド</h3>
+      <button onclick="closeThread()" class="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+    </header>
+    <div id="thread_content" class="flex-1 overflow-y-auto p-6 slack-scrollbar bg-white"></div>
+  </div>
+</div>
+
+<script>
+  function adjustChatTextareaHeight(el) { if (!el) return; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+
+  function clearEditMode() {
+    document.getElementById('editing_message_id').value = "";
+    document.getElementById('edit_label').classList.add('hidden');
+    const textarea = document.getElementById('message_textarea');
+    textarea.value = "";
+    adjustChatTextareaHeight(textarea);
+  }
+
+  function setEditMode(id, content) {
+    clearReplyMode();
+    const textarea = document.getElementById('message_textarea');
+    document.getElementById('editing_message_id').value = id;
+    textarea.value = content;
+    document.getElementById('edit_label').classList.remove('hidden');
+    textarea.focus();
+    adjustChatTextareaHeight(textarea);
+  }
+
+  function submitAsDraft() {
+    document.getElementById('commit_type').value = "draft";
+    document.getElementById('chat_form').requestSubmit();
+  }
+
+  function initChat() {
+    const textarea = document.getElementById('message_textarea');
+    const form = document.getElementById('chat_form');
+    const messagesArea = document.getElementById('messages_area');
+    const container = document.getElementById('chat_container');
+
+    if (!textarea || !form) return;
+
+    const newTextarea = textarea.cloneNode(true);
+    textarea.parentNode.replaceChild(newTextarea, textarea);
+    const finalForm = document.getElementById('chat_form');
+
+    if (messagesArea) messagesArea.scrollTop = messagesArea.scrollHeight;
+
+    const openThreadId = container.dataset.openThreadId;
+    if (openThreadId && openThreadId !== "") {
+      const threadButton = document.querySelector(`button[onclick*="openThread('${openThreadId}'"]`);
+      if (threadButton) { threadButton.click(); container.dataset.openThreadId = ""; }
+    }
+
+    newTextarea.addEventListener('input', function() { adjustChatTextareaHeight(this); });
+    newTextarea.addEventListener('keydown', function(e) {
+      if (e.isComposing) return;
+      if (e.key === 'Enter' && e.shiftKey) {
+        e.preventDefault();
+        if (this.value.trim() !== "") {
+          const submitBtn = finalForm.querySelector('button[type="submit"]');
+          if (submitBtn) submitBtn.disabled = true;
+          document.getElementById('commit_type').value = "publish";
+          finalForm.requestSubmit();
+        }
+      }
+      if (e.key === 'Escape') { clearEditMode(); clearReplyMode(); closeThread(); }
+    });
+  }
+
+  async function openThread(activityId, messageId) {
+    const panel = document.getElementById('thread_panel');
+    const content = document.getElementById('thread_content');
+    const container = document.getElementById('chat_container');
+    panel.classList.add('show');
+    content.innerHTML = '<div class="flex justify-center py-10"><div class="animate-spin h-5 w-5 border-2 border-emerald-500 border-t-transparent rounded-full"></div></div>';
+    try {
+      const response = await fetch(`/chat_rooms/<%= @chat_room.id %>/room_messages/${messageId}/thread`);
+      content.innerHTML = await response.text();
+      setReplyMode(activityId, "スレッド");
+      const url = new URL(window.location);
+      url.searchParams.set('thread_id', activityId);
+      window.history.replaceState({}, '', url);
+    } catch (e) { content.innerHTML = '<div class="p-6 text-red-500 text-sm font-bold">Error</div>'; }
+  }
+
+  function closeThread() {
+    const panel = document.getElementById('thread_panel');
+    if (panel) panel.classList.remove('show');
+    clearReplyMode();
+    const url = new URL(window.location);
+    url.searchParams.delete('thread_id');
+    window.history.replaceState({}, '', url);
+  }
+
+  function setReplyMode(activityId, userName) {
+    clearEditMode();
+    const parentInput = document.getElementById('parent_activity_id');
+    const label = document.getElementById('reply_user_name');
+    const preview = document.getElementById('reply_preview');
+    const textarea = document.getElementById('message_textarea');
+    if (parentInput) parentInput.value = activityId;
+    if (label) label.innerText = userName;
+    if (preview) preview.classList.remove('hidden');
+    if (textarea) textarea.focus();
+  }
+
+  function clearReplyMode() {
+    const parentInput = document.getElementById('parent_activity_id');
+    const preview = document.getElementById('reply_preview');
+    if (parentInput) parentInput.value = "";
+    if (preview) preview.classList.add('hidden');
+  }
+
+  document.addEventListener("turbo:load", initChat);
+  if (document.readyState !== "loading") initChat();
+</script>

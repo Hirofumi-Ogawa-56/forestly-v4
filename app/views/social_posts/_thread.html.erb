@@ -1,0 +1,54 @@
+<!-- app/views/social_posts/_thread.html.erb -->
+
+<%# --- 親ポストの表示 --- %>
+<div class="border-b border-gray-100 pb-5 mb-5">
+  <div class="flex items-start gap-3">
+    <%= profile_avatar_tag(@parent_activity.owner_profile, class: "h-10 w-10 rounded shadow-sm", size: 40) %>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-baseline gap-2">
+        <span class="font-black text-gray-900 text-[15px]"><%= @parent_activity.owner_profile.name %></span>
+        <span class="text-[11px] text-gray-400 font-medium"><%= @parent_activity.created_at.strftime("%H:%M") %></span>
+      </div>
+      <div class="text-gray-800 text-[15px] leading-relaxed mt-1.5">
+        <%= simple_format(@parent_post.content) %>
+      </div>
+      
+      <%# 親ポストへの「いいね」状態などもここに出すとSNSらしくなります %>
+      <div class="mt-3">
+        <% user_liked = @parent_activity.like_activities.exists?(owner_profile: current_profile) %>
+        <span class="text-[11px] font-bold <%= user_liked ? 'text-pink-500' : 'text-gray-400' %>">
+          ❤️ <%= @parent_activity.like_activities.count %>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%# --- コメント（スレッド返信）一覧 --- %>
+<div class="space-y-5">
+  <div class="flex items-center gap-2 mb-4">
+    <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">返信 <%= @comments.count %> 件</span>
+    <div class="h-px flex-1 bg-gray-50"></div>
+  </div>
+
+  <% if @comments.any? %>
+    <% @comments.each do |c_act| %>
+      <div class="flex items-start gap-3 group">
+        <%= profile_avatar_tag(c_act.owner_profile, class: "h-8 w-8 rounded shadow-xs", size: 32) %>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-baseline gap-2">
+            <span class="font-bold text-gray-900 text-[13px]"><%= c_act.owner_profile.name %></span>
+            <span class="text-[10px] text-gray-400"><%= c_act.created_at.strftime("%H:%M") %></span>
+          </div>
+          <div class="text-gray-700 text-[14px] leading-relaxed mt-0.5">
+            <%= simple_format(c_act.actable.content) %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="py-12 text-center text-gray-400">
+      <p class="text-xs">この投稿にまだ返信はありません</p>
+    </div>
+  <% end %>
+</div>

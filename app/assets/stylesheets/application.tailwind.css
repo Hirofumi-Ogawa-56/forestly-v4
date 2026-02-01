@@ -1,0 +1,51 @@
+/* app/assets/stylesheets/application.tailwind.css */
+@import "tailwindcss";
+@import "trix/dist/trix.css";
+
+/* プレーンなCSSで強制指定 */
+trix-toolbar {
+  position: sticky !important;
+  top: 0 !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-bottom: 1px solid #f3f4f6 !important;
+  padding: 12px 0 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  z-index: 50 !important;
+}
+
+trix-toolbar .trix-button-group {
+  display: flex !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+trix-toolbar button {
+  width: 36px !important;
+  height: 36px !important;
+  background-color: white !important;
+  border: none !important;
+  border-right: 1px solid #e5e7eb !important;
+  font-size: 0 !important; /* テキストを消す */
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+trix-toolbar button:last-child {
+  border-right: none !important;
+}
+
+trix-toolbar .trix-button--icon-bold::before { content: "B" !important; font-size: 14px !important; font-weight: bold !important; color: #374151 !important; }
+trix-toolbar .trix-button--icon-italic::before { content: "I" !important; font-size: 14px !important; font-style: italic !important; color: #374151 !important; }
+trix-toolbar .trix-button--icon-attach::before { content: "📎" !important; font-size: 14px !important; }
+
+trix-editor {
+  min-h: 500px !important;
+  border: none !important;
+  outline: none !important;
+  font-size: 18px !important;
+}

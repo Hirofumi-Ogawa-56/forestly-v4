@@ -1,0 +1,81 @@
+<!-- app/views/teams/new.html.erb -->
+<% content_for :sidebar do %>
+  <%= render 'sidebar' %>
+<% end %>
+
+<div class="max-w-2xl mx-auto">
+  <div class="pb-5 border-b border-gray-200 mb-6">
+    <h3 class="text-lg leading-6 font-medium text-gray-900">新規チーム作成</h3>
+  </div>
+
+  <% if @team %>
+    <%# 既に所属している場合の「案A」表示 %>
+    <div class="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-r-xl">
+      <div class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-amber-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <p class="text-sm text-amber-700 font-bold">
+          既にチーム「<%= @team.display_name %>」に所属しています。
+        </p>
+      </div>
+      <p class="text-xs text-amber-600 mt-2 ml-9">
+        新しいチームを作成するには、現在のチームを解散するか離脱する必要があります。
+      </p>
+      <div class="mt-4 ml-9">
+        <%= link_to "メンバー一覧に戻る", members_team_path, class: "text-xs bg-white border border-amber-300 px-3 py-1.5 rounded hover:bg-amber-100 transition-colors" %>
+      </div>
+    </div>
+
+  <% else %>
+    <%# チーム作成フォーム %>
+    <%= form_with(model: @team_new, url: team_path, class: "space-y-6") do |f| %>
+      <div class="flex flex-col items-center py-6 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+        <div id="avatar-preview-container" 
+             onclick="document.getElementById('team-avatar-input').click();" 
+             class="relative cursor-pointer group">
+          <div id="avatar-initial-display">
+            <div class="w-[120px] h-[120px] bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+          </div>
+          <img id="image-preview" src="#" alt="Preview" 
+               style="display: none; width: 120px; height: 120px; border-radius: 0.75rem; object-fit: cover;">
+          <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <span class="text-xs text-white bg-black/50 px-2 py-1 rounded">設定</span>
+          </div>
+        </div>
+        <%= f.file_field :avatar, id: "team-avatar-input", accept: 'image/*', onchange: "previewImage(this);", class: "hidden" %>
+        <p class="text-xs text-gray-500 mt-3">チームアイコンを設定（クリックしてアップロード）</p>
+      </div>
+
+      <div>
+        <%= f.label :display_name, "チーム名", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_field :display_name, placeholder: "例: Forestly開発チーム", class: "mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-[#00a968] focus:border-[#00a968]" %>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-4">
+        <%= link_to "キャンセル", members_team_path, class: "px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50" %>
+        <%= f.submit "チームを作成する", class: "px-4 py-2 text-sm font-medium text-white bg-[#00a968] rounded-md hover:bg-[#008f58] transition-colors cursor-pointer" %>
+      </div>
+    <% end %>
+  <% end %>
+</div>
+
+<script>
+  function previewImage(input) {
+    const preview = document.getElementById('image-preview');
+    const initialDisplay = document.getElementById('avatar-initial-display');
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        initialDisplay.style.display = 'none';
+      }
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+</script>

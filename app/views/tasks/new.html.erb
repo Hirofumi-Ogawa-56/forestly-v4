@@ -1,0 +1,74 @@
+<!-- app/views/tasks/new.html.erb -->
+<% content_for :sidebar do %>
+  <%= render 'sidebar' %>
+<% end %>
+
+<div class="max-w-2xl mx-auto px-4 py-8">
+  <div class="mb-8">
+    <h2 class="text-2xl font-bold text-gray-900">新規タスク作成</h2>
+    <p class="mt-1 text-sm text-gray-500">共通の公開設定とタスクの詳細を入力してください。</p>
+  </div>
+
+  <%= form_with(model: @task, class: "space-y-8") do |f| %>
+    
+    <%# --- Activity (共通項目) セクション --- %>
+    <div class="bg-gray-50 p-6 rounded-2xl border border-gray-200 space-y-6">
+      <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">共通設定</h3>
+      
+      <%= f.fields_for :activity do |af| %>
+        <div>
+          <%= af.label :title, "タイトル", class: "block text-sm font-medium text-gray-700" %>
+          <%= af.text_field :title, placeholder: "何をしますか？", class: "mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-[#00a968] focus:border-[#00a968] sm:text-sm" %>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <%= af.label :visibility_range, "公開範囲", class: "block text-sm font-medium text-gray-700" %>
+            <%= af.select :visibility_range, 
+                Activity.visibility_ranges_i18n.invert, 
+                {}, 
+                class: "mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-[#00a968] focus:border-[#00a968] sm:text-sm" %>
+          </div>
+
+          <div>
+            <%= af.label :status, "公開ステータス", class: "block text-sm font-medium text-gray-700" %>
+            <%= af.select :status, 
+                Activity.statuses_i18n.invert, 
+                {}, 
+                class: "mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-[#00a968] focus:border-[#00a968] sm:text-sm" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%# --- Task (固有項目) セクション --- %>
+    <div class="space-y-6 px-2">
+      <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">タスク詳細</h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <%= f.label :status, "進捗状況", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.select :status, 
+              Task.statuses_i18n.invert, 
+              {}, 
+              class: "mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-[#00a968] focus:border-[#00a968] sm:text-sm" %>
+        </div>
+
+        <div>
+          <%= f.label :deadline, "期限", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.datetime_field :deadline, class: "mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-[#00a968] focus:border-[#00a968] sm:text-sm" %>
+        </div>
+      </div>
+
+      <div>
+        <%= f.label :content, "説明・メモ", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.text_area :content, rows: 4, placeholder: "詳細な内容を入力してください", class: "mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-[#00a968] focus:border-[#00a968] sm:text-sm" %>
+      </div>
+    </div>
+
+    <div class="pt-5 border-t border-gray-200 flex justify-end gap-3">
+      <%= link_to "キャンセル", tasks_path, class: "px-6 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors" %>
+      <%= f.submit "タスクを作成", class: "px-6 py-2 bg-[#00a968] text-white rounded-xl text-sm font-bold hover:bg-[#008f58] transition-colors cursor-pointer shadow-md" %>
+    </div>
+  <% end %>
+</div>

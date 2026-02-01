@@ -1,0 +1,52 @@
+<!-- app/views/components/_activity_fields.html.erb -->
+<%# Activityのメタデータ設定用共通パーツ %>
+<div x-data="{ 
+  scope: '<%= f.object.visibility_range || 'is_private' %>', 
+  roomId: '<%= f.object.chat_room_id %>' 
+}" class="space-y-4">
+  
+  <div class="grid grid-cols-2 gap-6 py-4 border-y border-gray-100">
+    <%# --- 権限範囲 --- %>
+    <div>
+      <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">公開範囲</label>
+      <% 
+        options = { "is_private" => "プライベート" }
+        options["is_team"] = "チームメンバー" if @current_profile.team.present?
+        options["is_chat_room"] = "ルームメンバー"
+        options["is_public"] = "パブリック（全体）" # Works向けに追加
+      %>
+      <%= f.select :visibility_range, options.invert, {}, { "x-model": "scope", class: "w-full border-gray-200 rounded-lg text-sm" } %>
+    </div>
+
+    <%# --- ルーム選択 --- %>
+    <div x-show="scope === 'is_chat_room'" x-cloak>
+      <label class="block text-[10px] font-bold text-emerald-700 uppercase mb-1">対象ルーム</label>
+      <%= f.collection_select :chat_room_id, @current_profile.chat_rooms, :id, :display_name, 
+          { prompt: "選択してください" }, 
+          { "x-model": "roomId", class: "w-full border-emerald-200 rounded-lg text-sm" } %>
+    </div>
+  </div>
+
+  <%# --- 権限詳細 --- %>
+  <div class="flex gap-4 items-center bg-gray-50 p-3 rounded-lg">
+    <div class="flex-1">
+      <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">許可する操作</label>
+      <div class="flex gap-4">
+        <label class="flex items-center gap-2 text-sm text-gray-600">
+          <%= f.radio_button :permission_type, :read_only %> 閲覧のみ
+        </label>
+        <label class="flex items-center gap-2 text-sm text-gray-600">
+          <%= f.radio_button :permission_type, :edit_only %> 閲覧・編集
+        </label>
+      </div>
+    </div>
+    <div class="flex gap-3 border-l border-gray-200 pl-4">
+      <label class="flex items-center gap-1.5 text-[11px] text-gray-500">
+        <%= f.check_box :allow_comment %> コメント可
+      </label>
+      <label class="flex items-center gap-1.5 text-[11px] text-gray-500">
+        <%= f.check_box :allow_reaction %> 反応可
+      </label>
+    </div>
+  </div>
+</div>

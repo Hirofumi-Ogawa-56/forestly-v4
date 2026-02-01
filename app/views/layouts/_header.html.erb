@@ -1,0 +1,114 @@
+<!-- app/views/layouts/_header.html.erb -->
+<header class="bg-[#00a968] shadow-sm z-10 text-white">
+  <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    
+    <%# 左側：ロゴ ＋ 中央：(アラート & モジュール) エリア %>
+    <div class="flex items-center flex-1">
+      <%# ロゴセクション %>
+      <%= link_to authenticated_root_path, class: "flex items-center gap-4 hover:opacity-80 transition-opacity flex-shrink-0" do %>
+        <h1 class="text-2xl font-bold tracking-tight">Forestly</h1>
+        <span class="text-xs text-emerald-100 bg-emerald-700 px-2 py-0.5 rounded">β V.4</span>
+      <% end %>
+
+      <%# 中央：上下分割エリア (左詰め) %>
+      <div class="ml-10 flex flex-col justify-center h-16 flex-1 overflow-hidden">
+        <%# 上段：アラート・アナウンスエリア (固定高さを確保) %>
+        <div class="h-6 flex items-center">
+          <% if notice %>
+            <p class="text-[11px] font-medium bg-white/20 px-2 py-0.5 rounded animate-pulse"><%= notice %></p>
+          <% elsif alert %>
+            <p class="text-[11px] font-medium bg-red-500/40 px-2 py-0.5 rounded"><%= alert %></p>
+          <% end %>
+        </div>
+
+        <%# 下段：モジュールボタンエリア %>
+        <div class="flex items-center gap-6 mt-1">
+          <% if current_user.profiles.any? %>
+            <%# Tasks/Schedule リンク (新規追加) %>
+            <%= link_to tasks_path, class: "hover:text-emerald-100 flex items-center transition-colors group" do %>
+              <span class="text-[11px] font-bold uppercase tracking-wider group-hover:underline">Tasks/Schedule</span>
+            <% end %>
+
+            <%# Works リンク %>
+            <%= link_to works_path, class: "hover:text-emerald-100 flex items-center transition-colors group" do %>
+              <span class="text-[11px] font-bold uppercase tracking-wider group-hover:underline">Works</span>
+            <% end %>
+
+            <%# Caht リンク %>
+            <%= link_to chat_rooms_path, class: "hover:text-emerald-100 flex items-center transition-colors group" do %>
+              <span class="text-[11px] font-bold uppercase tracking-wider group-hover:underline">Chat</span>
+            <% end %>
+
+            <%# Social リンク %>
+            <%= link_to social_posts_path, class: "hover:text-emerald-100 flex items-center transition-colors group" do %>
+              <span class="text-[11px] font-bold uppercase tracking-wider group-hover:underline">Social</span>
+            <% end %>
+
+            <%# Profiles リンク %>
+            <%= link_to edit_profile_path(current_profile), class: "hover:text-emerald-100 flex items-center transition-colors group" do %>
+              <span class="text-[11px] font-bold uppercase tracking-wider group-hover:underline">Profiles</span>
+            <% end %>
+
+            <%# Teams リンク %>
+            <%= link_to members_team_path, class: "hover:text-emerald-100 flex items-center transition-colors group" do %>
+              <span class="text-[11px] font-bold uppercase tracking-wider group-hover:underline">Teams</span>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    
+    <%# 右側：プロフィール切り替え ＋ ログアウト %>
+    <div class="flex items-center gap-6 flex-shrink-0">
+      <% if current_user.profiles.any? %>
+        <details class="relative group">
+          <summary class="list-none cursor-pointer flex items-center gap-3 border-r border-white/20 pr-6 outline-none">
+            <div class="text-right hidden sm:block">
+              <p class="text-[9px] text-emerald-200 uppercase tracking-tighter leading-none mb-1">
+              <%= current_profile.team&.display_name || "所属チームなし" %></p>
+              <p class="text-sm font-black leading-none uppercase tracking-wide"><%= current_profile.label %></p>
+              <p class="text-emerald-100 text-[10px] mt-0.5"><%= current_profile.name %></p>
+            </div>
+            <div class="relative">
+              <%= profile_avatar_tag(current_profile, size: 36) %>
+              <div class="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-[#00a968]" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </div>
+            </div>
+          </summary>
+
+          <div class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50 text-gray-800">
+            <div class="px-4 py-2 border-b border-gray-100">
+              <p class="text-xs font-semibold text-gray-500 uppercase">プロフィールを切り替える</p>
+            </div>
+            <div class="max-height-64 overflow-y-auto">
+              <% current_user.profiles.select(&:persisted?).each do |profile| %>
+                <%= button_to switch_profile_path(profile), method: :patch, data: { turbo: false }, class: "w-full text-left px-4 py-3 hover:bg-emerald-50 flex items-center gap-3 transition-colors #{'bg-emerald-50 border-l-4 border-[#00a968]' if profile == current_profile}" do %>
+                  <%= profile_avatar_tag(profile, size: 32) %>
+                  <div>
+                    <p class="text-[9px] text-gray-400 uppercase"><%= profile.team&.display_name || "所属チームなし" %></p>
+                    <p class="text-sm font-bold leading-tight"><%= profile.label %></p>
+                    <p class="text-[10px] text-gray-500"><%= profile.name %></p>
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+            <div class="border-t border-gray-100 mt-2 px-2 py-2">
+              <%= link_to edit_profile_path(current_profile), class: "flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md" do %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                プロフィール設定
+              <% end %>
+            </div>
+          </div>
+        </details>
+      <% end %>
+
+      <%= link_to "ログアウト", destroy_user_session_path, data: { turbo_method: :delete }, class: "text-xs text-white border border-white/30 px-3 py-1.5 rounded-md hover:bg-white/10 transition-colors" %>
+    </div>
+  </div>
+</header>

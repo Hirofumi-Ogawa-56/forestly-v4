@@ -1,0 +1,186 @@
+<%# app/views/works/show.html.erb %>
+<% content_for :sidebar do %>
+  <%= render 'works/sidebar' %>
+<% end %>
+
+<% my_current_profile = current_profile %>
+
+<div class="flex h-full bg-white overflow-hidden relative">
+  <%# --- メイン：ドキュメントエリア --- %>
+  <div class="flex-1 overflow-y-auto slack-scrollbar relative">
+    <div class="max-w-4xl mx-auto w-full px-8 py-12">
+      <header class="mb-10">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-3">
+            <span class="px-2 py-0.5 rounded bg-gray-100 text-gray-500 text-[9px] font-black uppercase tracking-widest">
+              <%= @activity.visibility_range_i18n %>
+            </span>
+            <div class="h-3 w-[1px] bg-gray-200"></div>
+            <div class="flex items-center gap-2">
+              <%= profile_avatar_tag(@activity.owner_profile, size: 20) %>
+              <span class="text-[11px] font-bold text-gray-700"><%= @activity.owner_profile.name %></span>
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <%# いいねボタン（クイックアクション） %>
+            <%= button_to activity_likes_path(@activity), method: :post, class: "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border #{ @activity.like_activities.exists?(owner_profile: my_current_profile) ? 'bg-pink-50 border-pink-100 text-pink-500' : 'border-gray-100 text-gray-400 hover:bg-gray-50' } transition-all" do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 <%= 'fill-current' if @activity.like_activities.exists?(owner_profile: my_current_profile) %>" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+              <span class="text-[11px] font-bold"><%= @activity.likes_count if @activity.likes_count > 0 %></span>
+            <% end %>
+
+            <%# コメント開閉ボタン %>
+            <button onclick="toggleCommentSidebar()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-100 text-gray-500 hover:bg-gray-50 transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+              <span class="text-[11px] font-bold"><%= @activity.comment_activities.count %></span>
+            </button>
+          </div>
+        </div>
+
+        <h1 class="text-4xl font-black text-gray-900 leading-tight"><%= @activity.title %></h1>
+      </header>
+
+      <article class="prose prose-slate prose-lg max-w-none prose-headings:font-black border-t border-gray-50 pt-10">
+        <%= @note.content %>
+      </article>
+    </div>
+  </div>
+
+  <%# --- 右側：コメントサイドパネル --- %>
+  <aside id="comment_sidebar" class="hidden w-96 border-l border-gray-100 bg-white flex flex-col transition-all duration-300 shadow-2xl z-20">
+    <header class="h-16 px-6 border-b border-gray-100 flex items-center justify-between shrink-0">
+      <h3 class="font-black text-gray-900 text-sm">Discussions</h3>
+      <button onclick="toggleCommentSidebar()" class="text-gray-400 hover:text-gray-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+      </button>
+    </header>
+
+    <%# コメント一覧：Socialのリスト表示部分をこの中に入れる %>
+    <div class="flex-1 overflow-y-auto slack-scrollbar p-4 space-y-4" id="messages_area">
+      <% if @activity.comment_activities.any? %>
+        <% @activity.comment_activities.where(actable: Comment.where(parent_id: nil)).each do |c_act| %>
+          <div class="flex flex-col gap-1 group">
+            <div class="flex items-center gap-2">
+              <%= profile_avatar_tag(c_act.owner_profile, size: 24) %>
+              <span class="font-bold text-[13px] text-gray-900"><%= c_act.owner_profile.name %></span>
+              <span class="text-[10px] text-gray-400"><%= c_act.created_at.strftime("%H:%M") %></span>
+            </div>
+            <div class="ml-8 text-[14px] text-gray-700 leading-relaxed">
+              <%= simple_format(c_act.actable.content) %>
+              
+              <div class="flex items-center gap-3 mt-1">
+                <button onclick="setReplyMode('<%= @activity.id %>', '<%= j c_act.actable.content.truncate(20) %>', '<%= c_act.owner_profile.name %>', '<%= c_act.actable_id %>')" class="text-[10px] text-blue-500 font-bold hover:underline">返信</button>
+              </div>
+
+              <%# 2階層目の返信 %>
+              <% if c_act.actable.replies.any? %>
+                <div class="mt-3 space-y-3 border-l-2 border-gray-50 pl-3">
+                  <% c_act.actable.replies.each do |reply| %>
+                    <div class="text-[12px]">
+                      <span class="font-bold text-gray-900"><%= reply.activity.owner_profile.name %></span>
+                      <span class="text-gray-600 ml-1"><%= reply.content %></span>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="h-full flex flex-col items-center justify-center text-gray-300 py-10">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mb-2 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+          <p class="text-xs font-bold">まだディスカッションはありません</p>
+        </div>
+      <% end %>
+    </div>
+
+    <%# 入力エリア：SocialPostのフォームをベースに構築 %>
+    <footer class="p-4 border-t border-gray-100">
+      <%= form_with(model: Comment.new, url: activity_comments_path(@activity), id: "chat_form") do |f| %>
+        <input type="hidden" name="comment[parent_id]" id="comment_parent_id" value="">
+        <input type="hidden" name="social_post[content]" id="hidden_content">
+
+        <div id="reply_preview" class="hidden flex items-center justify-between mb-2 p-2 bg-blue-50 border border-blue-100 rounded text-[10px] text-blue-700">
+          <span class="truncate">💬 <span id="reply_user_name"></span> に返信中</span>
+          <button type="button" onclick="clearReplyMode()" class="text-blue-500 font-bold">×</button>
+        </div>
+
+        <div class="relative">
+          <textarea id="message_textarea" 
+                    placeholder="Shift + Enter で送信"
+                    onkeydown="handleKeydown(event)"
+                    class="w-full border-2 border-gray-100 focus:border-blue-500 focus:ring-0 rounded-lg p-3 text-sm resize-none slack-scrollbar" 
+                    rows="3"></textarea>
+          <button type="submit" onclick="syncContent()" class="absolute bottom-2 right-2 p-1.5 text-blue-500 hover:bg-blue-50 rounded-md transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9-2-9-18-9 18 9 2zm0 0v-8" /></svg>
+          </button>
+        </div>
+      <% end %>
+    </footer>
+  </aside>
+</div>
+
+<script>
+  function toggleCommentSidebar() {
+    const sidebar = document.getElementById('comment_sidebar');
+    if (!sidebar) return;
+    
+    sidebar.classList.toggle('hidden');
+    
+    if (!sidebar.classList.contains('hidden')) {
+        const area = document.getElementById('messages_area');
+        if (area) area.scrollTop = area.scrollHeight;
+    }
+    }
+
+  // フォーム送信時にtextareaの内容をhidden field（social_post[content]）に同期
+  // ※Controllerがparams[:social_post][:content]を期待しているため
+  function syncContent() {
+    document.getElementById('hidden_content').value = document.getElementById('message_textarea').value;
+  }
+
+  // SocialPostで使用しているJS関数をここでも定義、または共通JSファイルに移動
+  function clearReplyMode() {
+    const preview = document.getElementById('reply_preview');
+    const textarea = document.getElementById('message_textarea');
+    const parentIdInput = document.getElementById('comment_parent_id');
+    if (preview) preview.classList.add('hidden');
+    if (textarea) textarea.value = "";
+    if (parentIdInput) parentIdInput.value = "";
+  }
+
+  function setReplyMode(activityId, text, userName, parentCommentId = null) {
+    const sidebar = document.getElementById('comment_sidebar');
+    if (sidebar.classList.contains('hidden')) toggleCommentSidebar();
+    
+    const preview = document.getElementById('reply_preview');
+    const parentIdInput = document.getElementById('comment_parent_id');
+    const textarea = document.getElementById('message_textarea');
+    
+    document.getElementById('reply_user_name').innerText = userName;
+    parentIdInput.value = parentCommentId || "";
+    preview.classList.remove('hidden');
+    textarea.focus();
+  }
+
+  // 修正ポイント2: ページ読み込み時にURLを確認してパネルを開く
+  document.addEventListener("DOMContentLoaded", () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('comment_open') === 'true') {
+      toggleCommentSidebar(false); // アニメーションなしで開く
+    }
+  });
+
+  // 修正ポイント3: Shift + Enter の判定
+  function handleKeydown(e) {
+    if (e.key === 'Enter' && e.shiftKey) {
+      e.preventDefault(); // 改行を防ぐ
+      syncContent();      // hidden fieldに同期
+      document.getElementById('chat_form').submit(); // 送信
+    }
+  }
+
+  function syncContent() {
+    document.getElementById('hidden_content').value = document.getElementById('message_textarea').value;
+  }
+</script>

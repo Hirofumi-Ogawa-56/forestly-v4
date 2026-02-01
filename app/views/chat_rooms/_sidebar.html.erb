@@ -1,0 +1,39 @@
+<!-- app/views/chat_rooms/_sidebar.html.erb -->
+<div class="space-y-4">
+  <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Chat</p>
+  <%# 新規ルーム作成ボタン %>
+  <div class="px-2">
+    <%= link_to new_chat_room_path, class: "flex items-center justify-center w-full py-2 px-4 bg-[#00a968] text-white text-xs font-bold rounded-xl hover:bg-[#008f58] transition-all shadow-sm" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      新規ルーム作成
+    <% end %>
+  </div>
+
+  <%# ルーム一覧 %>
+  <div class="mt-4">
+    <div class="space-y-1">
+      <%# current_profile が参加しているルームを取得 %>
+      <%# ※ ChatMembership モデルを介して取得する想定 %>
+      <% chat_rooms = ChatRoom.joins(:room_memberships).where(room_memberships: { profile_id: current_profile.id }).order(updated_at: :desc) %>
+      
+      <% if chat_rooms.any? %>
+      <% chat_rooms.each do |room| %>
+        <%= link_to chat_room_path(room), 
+            class: "flex items-center p-2 rounded-lg hover:bg-gray-100 #{'bg-gray-100' if current_page?(chat_room_path(room))}" do %>
+          <%# アイコン表示 (avatar_tag など自作していればそれを使う) %>
+          <div class="w-10 h-10 bg-gray-200 rounded-lg flex-shrink-0 mr-3">
+            <% if room.avatar.attached? %>
+              <%= image_tag room.avatar, class: "w-full h-full object-cover rounded-lg" %>
+            <% end %>
+          </div>
+          <span class="text-sm font-medium text-gray-700 truncate"><%= room.display_name %></span>
+        <% end %>
+      <% end %>
+      <% else %>
+        <p class="px-3 py-4 text-xs italic text-gray-400">参加中のルームはありません</p>
+      <% end %>
+    </div>
+  </div>
+</div>

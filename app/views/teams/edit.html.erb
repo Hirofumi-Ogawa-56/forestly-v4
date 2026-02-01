@@ -1,0 +1,76 @@
+<!-- app/views/teams/edit.html.erb -->
+<% content_for :sidebar do %>
+  <%= render 'sidebar' %>
+<% end %>
+
+<div class="max-w-2xl mx-auto px-4">
+  <div class="pb-5 border-b border-gray-200 mb-6">
+    <h3 class="text-xl leading-6 font-bold text-gray-900">チーム設定</h3>
+  </div>
+
+  <% if @team %>
+    <%= form_with(model: @team, url: team_path, method: :patch, class: "space-y-6") do |f| %>
+      
+      <%# アイコン編集セクション %>
+      <div class="flex flex-col items-center py-8 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+        <div id="avatar-preview-container" 
+             onclick="document.getElementById('team-avatar-input').click();" 
+             class="relative cursor-pointer group">
+          
+          <div id="avatar-current-display">
+            <%= team_avatar_tag(@team, class: "w-[120px] h-[120px] rounded-2xl shadow-md object-cover") %>
+          </div>
+          
+          <img id="image-preview" src="#" alt="Preview" 
+               style="display: none; width: 120px; height: 120px; border-radius: 1rem; object-fit: cover;">
+          
+          <div class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
+            <span class="text-xs text-white font-bold bg-black/20 px-3 py-1.5 rounded-full backdrop-blur-sm">変更する</span>
+          </div>
+        </div>
+        <%= f.file_field :avatar, id: "team-avatar-input", accept: 'image/*', onchange: "previewImage(this);", class: "hidden" %>
+        <p class="text-xs text-gray-500 mt-4">クリックしてチームアイコンをアップロード</p>
+      </div>
+
+      <%# チーム名編集 %>
+      <div>
+        <%= f.label :display_name, "チーム名称", class: "block text-sm font-bold text-gray-700 mb-1" %>
+        <%= f.text_field :display_name, class: "block w-full border-gray-300 rounded-xl shadow-sm focus:ring-[#00a968] focus:border-[#00a968] py-3" %>
+      </div>
+
+      <%# 保存ボタン %>
+      <div class="flex justify-end gap-3 pt-6">
+        <%= link_to "キャンセル", members_team_path, class: "px-6 py-2.5 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors" %>
+        <%= f.submit "変更を保存する", class: "px-6 py-2.5 text-sm font-bold text-white bg-[#00a968] rounded-xl hover:bg-[#008f58] shadow-sm transition-colors cursor-pointer" %>
+      </div>
+    <% end %>
+
+  <% else %>
+    <%# 未所属時の表示 %>
+    <div class="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+      <div class="flex justify-center mb-4 text-gray-300">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <p class="text-gray-600 font-bold mb-4">現在、チームに所属していません。</p>
+      <%= link_to "新規チーム作成へ", new_team_path, class: "text-[#00a968] font-bold hover:underline" %>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  function previewImage(input) {
+    const preview = document.getElementById('image-preview');
+    const currentDisplay = document.getElementById('avatar-current-display');
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        currentDisplay.style.display = 'none';
+      }
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+</script>

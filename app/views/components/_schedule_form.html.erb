@@ -1,0 +1,136 @@
+<%# app/views/components/_schedule_form.html.erb %>
+<div x-data="{ 
+  scope: '<%= schedule.activity&.visibility_range || 'is_private' %>', 
+  roomId: '<%= schedule.activity&.chat_room_id %>' 
+}" class="space-y-6 text-left">
+
+  <%= form_with(model: schedule, url: schedule.persisted? ? schedule_path(schedule) : schedules_path, class: "space-y-4") do |f| %>
+    <%= f.fields_for :activity do |af| %>
+      <%= af.hidden_field :id %>
+
+      <%# --- タイトル --- %>
+      <%= af.text_field :title, placeholder: "予定のタイトル...", class: "w-full border-none focus:ring-0 text-xl font-bold placeholder-gray-300 p-0 bg-transparent" %>
+
+      <div class="py-4 border-y border-gray-100 space-y-4">
+        <%# --- 日時設定 --- %>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">開始日時</label>
+            <%= f.datetime_field :start_at, class: "w-full border-gray-200 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500" %>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">終了日時</label>
+            <%= f.datetime_field :end_at, class: "w-full border-gray-200 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500" %>
+          </div>
+        </div>
+
+        <%# --- 権限範囲 --- %>
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">公開範囲</label>
+          <% 
+            options = { "is_private" => "プライベート" }
+            options["is_team"] = "チームメンバー" if @current_profile.team.present?
+            options["is_chat_room"] = "ルームメンバー"
+          %>
+          <%= af.select :visibility_range, 
+              options.invert, 
+              {}, 
+              { "x-model": "scope", class: "w-full border-gray-200 rounded-lg text-sm" } 
+          %>
+        </div>
+      </div>
+
+      <%# --- ルーム選択 (アバター表示追加) --- %>
+      <template x-if="scope === 'is_chat_room'">
+        <div class="bg-blue-50 p-4 rounded-xl space-y-3 mb-4 shadow-inner">
+          <label class="block text-xs font-bold text-blue-700">対象のルームを選択</label>
+          <div class="relative">
+            <%= af.collection_select :chat_room_id, @current_profile.chat_rooms, :id, :display_name, 
+                { prompt: "ルームを選択してください" }, 
+                { "x-model": "roomId", class: "w-full border-blue-200 rounded-lg text-sm pl-3 pr-10 appearance-none bg-white h-11" } %>
+            
+            <%# ルームアバターの動的表示 %>
+            <div class="absolute right-10 top-1/2 -translate-y-1/2 pointer-events-none">
+              <% @current_profile.chat_rooms.each do |room| %>
+                <div x-show="roomId == '<%= room.id %>'">
+                  <%= profile_avatar_tag(room, class: "h-6 w-6 rounded shadow-sm object-cover", size: 24) %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <%# --- 権限詳細 --- %>
+      <div class="flex gap-4 items-center bg-gray-50 p-3 rounded-lg">
+        <div class="flex-1">
+          <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">許可する操作</label>
+          <div class="flex gap-6">
+            <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <%= af.radio_button :permission_type, :read_only, class: "text-blue-600 focus:ring-blue-500" %> 閲覧のみ
+            </label>
+            <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <%= af.radio_button :permission_type, :edit_only, class: "text-blue-600 focus:ring-blue-500" %> 閲覧・編集
+            </label>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <%# --- 招待者設定 (アバター表示追加) --- %>
+    <div class="space-y-3 pt-2">
+      <label class="block text-[10px] font-bold text-gray-400 uppercase">参加者の招待</label>
+      <div class="space-y-3">
+        <%# 自分 %>
+        <div class="flex items-center gap-3 p-2 border border-blue-100 bg-blue-50 rounded-lg w-fit pr-4">
+          <%= profile_avatar_tag(@current_profile, class: "h-6 w-6 rounded-full shadow-sm", size: 24) %>
+          <span class="text-xs font-bold text-blue-700"><%= @current_profile.name %> (自分)</span>
+          <%= f.hidden_field :invitee_ids, name: "schedule[invitee_ids][]", value: @current_profile.id %>
+        </div>
+
+        <%# チームメンバー候補 %>
+        <div x-show="scope === 'is_team'" x-cloak class="p-3 bg-gray-50 rounded-lg border border-gray-100">
+          <div class="grid grid-cols-2 gap-2">
+            <% if @current_profile.team.present? %>
+              <% @current_profile.team.profiles.where.not(id: @current_profile.id).each do |profile| %>
+                <label class="flex items-center gap-3 text-xs text-gray-700 bg-white p-2 rounded border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors">
+                  <%= f.check_box :invitee_ids, { name: "schedule[invitee_ids][]", class: "rounded text-blue-600 focus:ring-blue-500" }, profile.id, nil %>
+                  <%= profile_avatar_tag(profile, class: "h-6 w-6 rounded-full shadow-sm", size: 24) %>
+                  <span class="truncate"><%= profile.name %></span>
+                </label>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+
+        <%# ルームメンバー候補 %>
+        <div x-show="scope === 'is_chat_room' && roomId" x-cloak class="p-3 bg-blue-50 rounded-lg border border-blue-100">
+          <% @current_profile.chat_rooms.each do |room| %>
+            <template x-if="roomId == '<%= room.id %>'">
+              <div class="grid grid-cols-2 gap-2">
+                <% room.profiles.where.not(id: @current_profile.id).each do |profile| %>
+                  <label class="flex items-center gap-3 text-xs text-gray-700 bg-white p-2 rounded border border-blue-100 cursor-pointer hover:bg-blue-50 transition-colors">
+                    <%= f.check_box :invitee_ids, { name: "schedule[invitee_ids][]", class: "rounded text-blue-600 focus:ring-blue-500" }, profile.id, nil %>
+                    <%= profile_avatar_tag(profile, class: "h-6 w-6 rounded-full shadow-sm", size: 24) %>
+                    <span class="truncate"><%= profile.name %></span>
+                  </label>
+                <% end %>
+              </div>
+            </template>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <%= f.text_area :describe, placeholder: "詳細（場所やメモなど）", class: "w-full border-gray-200 rounded-lg text-sm mt-4 focus:ring-blue-500 focus:border-blue-500", rows: 3 %>
+
+    <div class="flex justify-end gap-2 pt-4">
+      <% if schedule.persisted? %>
+        <%= link_to 'キャンセル', schedules_path, class: "text-sm text-gray-500 px-4 font-bold flex items-center" %>
+      <% else %>
+        <button type="button" @click="open_form = null" class="text-sm text-gray-500 px-4 font-bold">キャンセル</button>
+      <% end %>
+      <%= f.submit schedule.persisted? ? "予定を更新" : "予定を保存", class: "bg-blue-600 text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-blue-100 cursor-pointer hover:bg-blue-700 transition-colors" %>
+    </div>
+  <% end %>
+</div>

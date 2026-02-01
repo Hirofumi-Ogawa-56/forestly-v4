@@ -1,0 +1,45 @@
+<%# app/views/room_messages/_thread.html.erb %>
+<div class="space-y-6">
+  <%# 親メッセージのコピー %>
+  <div class="flex items-start gap-3 pb-6 border-b border-gray-100">
+    <%= profile_avatar_tag(@parent_activity.owner_profile, size: 36, class: "rounded shadow-sm") %>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-baseline gap-2 mb-1">
+        <span class="font-black text-gray-900 text-[15px]"><%= @parent_activity.owner_profile.name %></span>
+        <span class="text-[11px] text-gray-400"><%= @parent_activity.created_at.strftime("%H:%M") %></span>
+      </div>
+      <div class="text-gray-800 text-[14px] leading-relaxed">
+        <%= simple_format(@parent_message.content) %>
+      </div>
+    </div>
+  </div>
+
+  <%# 返信一覧 %>
+  <div class="space-y-5">
+    <div class="flex items-center gap-2">
+      <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">返信 <%= @comments.count %> 件</span>
+      <div class="h-[1px] flex-1 bg-gray-50"></div>
+    </div>
+    
+    <% if @comments.any? %>
+      <% @comments.each do |c_act| %>
+        <div class="flex items-start gap-3 group/comment">
+          <%= profile_avatar_tag(c_act.owner_profile, size: 28, class: "rounded") %>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-baseline gap-2 mb-0.5">
+              <span class="font-bold text-gray-900 text-[13px]"><%= c_act.owner_profile.name %></span>
+              <span class="text-[10px] text-gray-400"><%= c_act.created_at.strftime("%H:%M") %></span>
+            </div>
+            <div class="text-gray-700 text-[13px] leading-snug">
+              <%= simple_format(c_act.actable.content) %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="py-8 text-center">
+        <p class="text-[12px] text-gray-400">まだ返信はありません</p>
+      </div>
+    <% end %>
+  </div>
+</div>

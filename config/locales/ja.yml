@@ -1,0 +1,40 @@
+# config/locales/ja.yml
+ja:
+  activerecord:
+    models:
+      task: "タスク"
+      schedule: "予定"
+    attributes:
+      task:
+        task_status: "ステータス"
+      schedule:
+        schedule_status: "予定状態"
+      schedule_invitation:
+        invitation_status: "招待状況"
+        join_status: "回答"
+    enums:
+      task:
+        task_status:
+          todo: "未着手"
+          "0": "未着手"
+          in_progress: "進行中"
+          "1": "進行中"
+          done: "完了"
+          "2": "完了"
+          backlog: "保留"
+          "3": "保留"
+      schedule:
+        schedule_status:
+          confirmed: "確定"
+          suggestion: "打診"
+          canceled: "中止"
+      schedule_invitation:
+        invitation_status:
+          pending: "保留"
+          suggestion: "打診中"
+          confirmed: "確定"
+          canceled: "取消"
+        join_status:
+          pending: "未回答"
+          approved: "参加"
+          rejected: "不参加"
