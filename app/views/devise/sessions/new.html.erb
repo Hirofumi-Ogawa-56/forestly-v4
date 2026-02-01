@@ -5,6 +5,23 @@
     <h1 class="text-5xl font-extrabold text-[#00a968] tracking-tight">Forestly</h1>
     <p class="mt-2 text-sm text-gray-500 font-medium">β版 Version.4</p>
     <h2 class="mt-6 text-2xl font-bold text-gray-900">Login</h2>
+
+    <!-- ゲストログイン用 -->
+    <%= button_to 'Forestlyとは？', guest_sign_in_path, method: :post, class: 'btn-guest-intro' %>
+
+    <style>
+    /* ポートフォリオ用に少し目立たせるスタイル例 */
+    .btn-guest-intro {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #28a745; /* 清潔感のある緑 */
+      color: white;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    </style>
   </div>
 
   <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">

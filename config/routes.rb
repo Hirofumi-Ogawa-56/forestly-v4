@@ -2,7 +2,8 @@
 Rails.application.routes.draw do
   # controllers オプションを追加
   devise_for :users, controllers: {
-    registrations: "users/registrations"
+    registrations: "users/registrations",
+    sessions: "users/sessions"
   }
 
   authenticated :user do
@@ -63,4 +64,9 @@ Rails.application.routes.draw do
 
   # Schedule用のルーティング
   resources :schedule_invitations, only: [ :update ]
+
+  # ゲストログイン用のルーティング
+  devise_scope :user do
+    post "guest_sign_in", to: "users/sessions#guest_sign_in"
+  end
 end
