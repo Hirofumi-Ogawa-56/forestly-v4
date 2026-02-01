@@ -1,6 +1,7 @@
 # app/controllers/users/sessions_controller.rb
 class Users::SessionsController < Devise::SessionsController
   def guest_sign_in
+    User.find_by(email: "guest@example.com")&.destroy
     user = User.find_or_create_by!(email: "guest@example.com") do |u|
       u.password = SecureRandom.urlsafe_base64
     end
