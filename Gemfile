@@ -2,7 +2,6 @@ source "https://rubygems.org"
 
 gem "rails", "~> 7.2.3"
 gem "sprockets-rails"
-gem "sqlite3", ">= 1.4"
 gem "puma", ">= 5.0"
 gem "jsbundling-rails"
 gem "turbo-rails"
@@ -23,12 +22,15 @@ gem "bootsnap", require: false
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
 group :development, :test do
+  gem "sqlite3", ">= 1.4"
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
   gem "brakeman", require: false
   gem "rubocop-rails-omakase", require: false
-
-  # RSpec を追加
   gem "rspec-rails", "~> 7.0"
+end
+
+group :production do
+  gem "pg"
 end
 
 group :development do
