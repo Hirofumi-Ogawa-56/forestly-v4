@@ -10,12 +10,19 @@
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Swiper.jsの導入 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   </head>
 
   <%# bodyをh-fullかつoverflow-hiddenにすることで、ブラウザ全体のスクロールを止めます %>
   <body class="h-full overflow-hidden text-gray-900">
     <% if user_signed_in? %>
       <div class="h-full flex flex-col">
+         <%# モーダルをログイン後のレイアウト内に配置（z-index 100なので一番上にきます） %>
+         <%= render 'shared/onboarding_modal' %>
+
         <%# 1. ヘッダーセクション（固定） %>
         <header class="flex-shrink-0 z-40">
           <%= render 'layouts/header' %>

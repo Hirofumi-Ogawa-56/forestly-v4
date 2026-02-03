@@ -11,10 +11,11 @@ app/models/room_message.rb
 class RoomMessage < ApplicationRecord
   # Activityとの紐付け（実体側）
   has_one :activity, as: :actable, dependent: :destroy
-  
+
   # バリデーション
   validates :content, presence: true
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/models/note.rb
 --- START OF FILE ---
 # app/models/note.rb
@@ -24,17 +25,19 @@ class Note < ApplicationRecord
 
   # Googleドキュメント風のリッチテキストを扱う（画像添付も可能）
   has_rich_text :content
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/models/social_repost.rb
 --- START OF FILE ---
 # app/models/social_repost.rb
 class SocialRepost < SocialPost
   # 元の投稿へのリレーション
-  belongs_to :source_post, class_name: 'SocialPost', foreign_key: 'source_post_id'
+  belongs_to :source_post, class_name: "SocialPost", foreign_key: "source_post_id"
 
   # リポストなので、元ネタ（source_post_id）は必須
   validates :source_post_id, presence: true
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/models/task_assignee.rb
 --- START OF FILE ---
 class TaskAssignee < ApplicationRecord
@@ -55,10 +58,10 @@ class Schedule < ApplicationRecord
   has_many :invitees, through: :schedule_invitations, source: :profile
 
   # ステータスの定義（設計通り）
-  enum :schedule_status, { 
-    confirmed: 'confirmed', 
-    suggestion: 'suggestion', 
-    canceled: 'canceled' 
+  enum :schedule_status, {
+    confirmed: "confirmed",
+    suggestion: "suggestion",
+    canceled: "canceled"
   }, default: :confirmed, prefix: true
 end
 -e \n--- END OF FILE ---\n
@@ -68,11 +71,12 @@ app/models/work.rb
 class Work < ApplicationRecord
   # Note, Table, Book などがここに紐付く
   belongs_to :actable, polymorphic: true, dependent: :destroy
-  
+
   # Activity 側からの入り口
   has_one :activity, as: :actable, dependent: :destroy
   accepts_nested_attributes_for :activity
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/models/team_membership_request.rb
 --- START OF FILE ---
 class TeamMembershipRequest < ApplicationRecord
@@ -91,18 +95,18 @@ class ScheduleInvitation < ApplicationRecord
   belongs_to :profile
 
   # 招待の状態 (主催者側)
-  enum :invitation_status, { 
-    pending: 'pending', 
-    suggestion: 'suggestion', 
-    confirmed: 'confirmed', 
-    canceled: 'canceled' 
+  enum :invitation_status, {
+    pending: "pending",
+    suggestion: "suggestion",
+    confirmed: "confirmed",
+    canceled: "canceled"
   }, default: :pending, prefix: true
 
   # 参加の回答 (招待された側)
-  enum :join_status, { 
-    pending: 'pending', 
-    approved: 'approved', 
-    rejected: 'rejected' 
+  enum :join_status, {
+    pending: "pending",
+    approved: "approved",
+    rejected: "rejected"
   }, default: :pending, prefix: true
 end
 -e \n--- END OF FILE ---\n
@@ -111,12 +115,13 @@ app/models/like.rb
 # app/models/like.rb
 class Like < ApplicationRecord
   has_one :activity, as: :actable, dependent: :destroy
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/models/activity.rb
 --- START OF FILE ---
 # app/models/activity.rb
 class Activity < ApplicationRecord
-  belongs_to :owner_profile, class_name: 'Profile'
+  belongs_to :owner_profile, class_name: "Profile"
   belongs_to :team, optional: true
   belongs_to :actable, polymorphic: true, dependent: :destroy
   belongs_to :chat_room, optional: true
@@ -124,30 +129,30 @@ class Activity < ApplicationRecord
   belongs_to :schedule, foreign_key: :actable_id, optional: true
   belongs_to :parent_activity, class_name: "Activity", optional: true
 
-  has_one :task_relation, -> { where(activities: { actable_type: 'Task' }) }, 
-          foreign_key: :id, primary_key: :actable_id, class_name: 'Task'
-  has_one :schedule_relation, -> { where(activities: { actable_type: 'Schedule' }) }, 
-          foreign_key: :id, primary_key: :actable_id, class_name: 'Schedule'
+  has_one :task_relation, -> { where(activities: { actable_type: "Task" }) },
+          foreign_key: :id, primary_key: :actable_id, class_name: "Task"
+  has_one :schedule_relation, -> { where(activities: { actable_type: "Schedule" }) },
+          foreign_key: :id, primary_key: :actable_id, class_name: "Schedule"
   has_many :child_activities, class_name: "Activity", foreign_key: :parent_activity_id, dependent: :destroy
 
   # コメントといいねを簡単に取得するためのスコープ
-  has_many :comment_activities, -> { where(actable_type: 'Comment') }, 
-           class_name: 'Activity', foreign_key: :parent_activity_id
-  has_many :like_activities, -> { where(actable_type: 'Like') }, 
-           class_name: 'Activity', foreign_key: :parent_activity_id
+  has_many :comment_activities, -> { where(actable_type: "Comment") },
+           class_name: "Activity", foreign_key: :parent_activity_id
+  has_many :like_activities, -> { where(actable_type: "Like") },
+           class_name: "Activity", foreign_key: :parent_activity_id
 
   enum :status, { draft: 0, active: 1, archived: 2 }
   enum :visibility_range, { is_private: 0, is_team: 1, is_chat_room: 2, is_public: 3 }
   enum :permission_type, { read_only: 0, edit_only: 1 }
 
-  validates :title, presence: true, unless: -> { actable_type.in?(['Comment', 'Like']) }
+  validates :title, presence: true, unless: -> { actable_type.in?([ "Comment", "Like" ]) }
 
-  scope :room_messages, -> { where(actable_type: 'RoomMessage') }
+  scope :room_messages, -> { where(actable_type: "RoomMessage") }
 
   # 権限スコープ: 閲覧可能なレコードのみを絞り込む
   scope :visible_to, ->(profile) {
     return none unless profile
-    
+
     # 自分が作成した、または公開されている、または所属チームに公開されている
     where(owner_profile: profile)
       .or(where(visibility_range: :is_public))
@@ -164,9 +169,9 @@ class Activity < ApplicationRecord
 
     # 3. 公開範囲（visibility_range）のチェック
     case visibility_range
-    when 'is_team'
+    when "is_team"
       owner_profile.team_id == profile.team_id
-    when 'is_chat_room'
+    when "is_chat_room"
       chat_room&.profiles&.include?(profile)
     else
       false
@@ -176,11 +181,11 @@ class Activity < ApplicationRecord
   # 単一のプロフィールに対して表示可能かを判定
   def visible_to?(profile)
     return false unless profile
-    
-    owner_profile == profile || 
-    visibility_range == 'is_public' || 
-    (visibility_range == 'is_team' && team_id == profile.team_id && team_id.present?) ||
-    (visibility_range == 'is_chat_room' && chat_room&.profiles&.include?(profile))
+
+    owner_profile == profile ||
+    visibility_range == "is_public" ||
+    (visibility_range == "is_team" && team_id == profile.team_id && team_id.present?) ||
+    (visibility_range == "is_chat_room" && chat_room&.profiles&.include?(profile))
   end
 
   def comments_count
@@ -190,7 +195,8 @@ class Activity < ApplicationRecord
   def likes_count
     like_activities.count
   end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/models/team.rb
 --- START OF FILE ---
 class Team < ApplicationRecord
@@ -214,15 +220,16 @@ class Team < ApplicationRecord
   def release_members
     # 所属している全プロフィールの team_id と role をリセット
     profiles.update_all(team_id: nil, team_role: nil)
-  end  
-end-e \n--- END OF FILE ---\n
+  end
+end
+-e \n--- END OF FILE ---\n
 app/models/social_post.rb
 --- START OF FILE ---
 # app/models/social_post.rb
 class SocialPost < ApplicationRecord
   has_one :activity, as: :actable, dependent: :destroy
-  has_many :reposts, class_name: 'SocialRepost', foreign_key: 'source_post_id'
-  validates :content, presence: true, unless: -> { type == 'SocialRepost' }
+  has_many :reposts, class_name: "SocialRepost", foreign_key: "source_post_id"
+  validates :content, presence: true, unless: -> { type == "SocialRepost" }
 
   delegate :status, :visibility_range, :owner_profile, :created_at, to: :activity, allow_nil: true
 end
@@ -236,6 +243,8 @@ class Profile < ApplicationRecord
   has_many :team_membership_requests, dependent: :destroy
   has_many :room_memberships, class_name: "RoomMembership", dependent: :destroy
   has_many :chat_rooms, through: :room_memberships, source: :chat_room
+  has_many :activities, foreign_key: :owner_profile_id, dependent: :destroy
+  has_many :task_assignees, dependent: :destroy
   has_one_attached :avatar
 
   # 概要に基づいたステータスとロール
@@ -262,14 +271,15 @@ class Profile < ApplicationRecord
       break random_id unless Profile.exists?(profile_id: random_id)
     end
   end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/models/comment.rb
 --- START OF FILE ---
 # app/models/comment.rb
 class Comment < ApplicationRecord
   # Activityとのポリモーフィック関連
   has_one :activity, as: :actable, dependent: :destroy
-  
+
   # 自己参照: スレッド機能（2層まで）
   belongs_to :parent, class_name: "Comment", optional: true
   has_many :replies, class_name: "Comment", foreign_key: :parent_id, dependent: :destroy
@@ -285,7 +295,8 @@ class Comment < ApplicationRecord
       errors.add(:base, "スレッドは2階層までです")
     end
   end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/models/room_membership.rb
 --- START OF FILE ---
 # app/models/room_mrmbership.rb
@@ -293,7 +304,8 @@ class RoomMembership < ApplicationRecord
   belongs_to :profile
   belongs_to :chat_room
   enum :role, { member: 0, admin: 1 }
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/models/application_record.rb
 --- START OF FILE ---
 # app/models/application_record.rb
@@ -311,7 +323,8 @@ class User < ApplicationRecord
   has_many :profiles, dependent: :destroy
   # User作成時にProfileも一緒に作れるようにする設定
   accepts_nested_attributes_for :profiles
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/models/chat_room.rb
 --- START OF FILE ---
 # app/models/chat_room.rb
@@ -320,7 +333,7 @@ class ChatRoom < ApplicationRecord
   has_many :profiles, through: :room_memberships
   has_many :activities, foreign_key: :chat_room_id
   has_one_attached :avatar
-  
+
   enum :status, { active: 0, archived: 1 }
 
   attr_accessor :creator_profile_id
@@ -340,7 +353,8 @@ class ChatRoom < ApplicationRecord
       role: :admin
     )
   end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/models/task.rb
 --- START OF FILE ---
 # app/models/task.rb
@@ -351,10 +365,11 @@ class Task < ApplicationRecord
   # 担当者（複数）の紐付け
   has_many :task_assignees, dependent: :destroy
   has_many :assignees, through: :task_assignees, source: :profile
-  
+
   # エラー回避のため命名をDBカラムに合わせて統一
   enum :task_status, { todo: 0, in_progress: 1, done: 2, backlog: 3 }
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/jobs/application_job.rb
 --- START OF FILE ---
 class ApplicationJob < ActiveJob::Base
@@ -373,13 +388,13 @@ class ScheduleInvitationsController < ApplicationController
 
   def update
     @invitation = ScheduleInvitation.find(params[:id])
-    
+
     # 自分の招待のみ更新可能
     if @invitation.profile == current_profile
       if @invitation.update(invitation_params)
-        redirect_to tasks_path, notice: '回答を更新しました'
+        redirect_to tasks_path, notice: "回答を更新しました"
       else
-        redirect_to tasks_path, alert: '更新に失敗しました'
+        redirect_to tasks_path, alert: "更新に失敗しました"
       end
     end
   end
@@ -389,7 +404,8 @@ class ScheduleInvitationsController < ApplicationController
   def invitation_params
     params.require(:schedule_invitation).permit(:join_status)
   end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/controllers/application_controller.rb
 --- START OF FILE ---
 # app/controllers/application_controller.rb
@@ -399,14 +415,14 @@ class ApplicationController < ActionController::Base
 
   def current_profile
     return @current_profile if @current_profile
-    
+
     # 1. セッションに保存されたIDがあるか確認
     # 2. なければ最新のプロフィールを使用
     # 3. それもなければ nil
     if session[:current_profile_id]
       @current_profile = current_user.profiles.find_by(id: session[:current_profile_id])
     end
-    
+
     @current_profile ||= current_user.profiles.first
   end
 
@@ -419,9 +435,10 @@ class ApplicationController < ActionController::Base
 
   def configure_permitted_parameters
     # サインアップ時にprofiles_attributesを許可する
-    devise_parameter_sanitizer.permit(:sign_up, keys: [profiles_attributes: [:label, :name, :avatar]])
+    devise_parameter_sanitizer.permit(:sign_up, keys: [ profiles_attributes: [ :label, :name, :avatar ] ])
   end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/controllers/chat_rooms_controller.rb
 --- START OF FILE ---
 # app/controllers/chat_rooms_controller.rb
@@ -442,7 +459,7 @@ class ChatRoomsController < ApplicationController
     @chat_room.creator_profile_id = current_profile.id
 
     if @chat_room.save
-      redirect_to chat_rooms_path, notice: 'チャットルームを作成しました'
+      redirect_to chat_rooms_path, notice: "チャットルームを作成しました"
     else
       render :new, status: :unprocessable_entity
     end
@@ -457,7 +474,7 @@ class ChatRoomsController < ApplicationController
     if @chat_room.update(chat_room_params)
       # 保存後に edit ページへリダイレクト（＝リロード）
       # notice に入れた文言がアラートとして表示される
-      redirect_to edit_chat_room_path(@chat_room), notice: 'ルーム設定を更新しました'
+      redirect_to edit_chat_room_path(@chat_room), notice: "ルーム設定を更新しました"
     else
       render :edit, status: :unprocessable_entity
     end
@@ -472,22 +489,23 @@ class ChatRoomsController < ApplicationController
     if @chat_room.nil?
       redirect_to chat_rooms_path, notice: "そのチャットルームには参加していないか、存在しません。"
     end
-    
+
     # 見つかった場合はそのまま show.html.erb がレンダリングされます
   end
-  
+
 
   def chat_room_params
-    params.require(:chat_room).permit(:display_name, :avatar) 
+    params.require(:chat_room).permit(:display_name, :avatar)
   end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/controllers/teams_controller.rb
 --- START OF FILE ---
 # app/controllers/teams_controller.rb
 class TeamsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_team
-  before_action :ensure_admin, only: [:edit, :update]
+  before_action :ensure_admin, only: [ :edit, :update ]
 
   def members
     if @team
@@ -506,7 +524,7 @@ class TeamsController < ApplicationController
 
   def create
     @team_new = Team.new(team_params)
-    
+
     if current_profile.team.present?
       redirect_to members_team_path, alert: "既にチームに所属しているため、作成できません。"
       return
@@ -526,7 +544,7 @@ class TeamsController < ApplicationController
         team: @team_new,
         team_role: :admin
       )
-      
+
       # 全て成功した場合のみ確定してリダイレクト
       redirect_to members_team_path, notice: "チーム「#{@team_new.display_name}」を作成しました。"
     end
@@ -569,7 +587,8 @@ class TeamsController < ApplicationController
         redirect_to members_team_path, alert: "管理者権限が必要です。"
     end
   end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/controllers/room_memberships_controller.rb
 --- START OF FILE ---
 # app/controllers/room_memberships_controller.rb
@@ -600,7 +619,8 @@ class RoomMembershipsController < ApplicationController
     @membership.destroy
     redirect_to edit_chat_room_path(@chat_room), notice: "メンバーを解除しました"
   end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/controllers/room_messages_controller.rb
 --- START OF FILE ---
 # app/controllers/room_messages_controller.rb
@@ -614,7 +634,7 @@ class RoomMessagesController < ApplicationController
     if params[:parent_activity_id].present? && target_status == :active
       @parent_activity = Activity.find(params[:parent_activity_id])
       @comment = Comment.new(content: params[:room_message][:content])
-      
+
       if @comment.save
         # ChatのスレッドとしてActivityを作成
         Activity.create!(
@@ -634,7 +654,7 @@ class RoomMessagesController < ApplicationController
     if params[:message_id].present?
       @message = RoomMessage.find(params[:message_id])
       @activity = Activity.find_by(actable: @message)
-      
+
       if @activity && @activity.owner_profile == @current_profile
         update_params = { content: params[:room_message][:content] }
         update_params[:edited_at] = Time.current if target_status == :active && @activity.active?
@@ -666,7 +686,7 @@ class RoomMessagesController < ApplicationController
   def destroy
     @chat_room = ChatRoom.find(params[:chat_room_id])
     @message = RoomMessage.find(params[:id])
-    
+
     # 自身のプロフィールに紐づく Activity を探す
     activity = Activity.find_by(actable: @message, owner_profile: current_profile)
 
@@ -688,7 +708,7 @@ class RoomMessagesController < ApplicationController
     @parent_message = RoomMessage.find(params[:id])
     @parent_activity = Activity.find_by(actable: @parent_message)
     @comments = @parent_activity.comment_activities.includes(:owner_profile, :actable).order(created_at: :asc)
-    
+
     # レイアウトを適用せず、パーシャル（または特定部分）だけを返す
     render partial: "thread"
   end
@@ -698,7 +718,8 @@ class RoomMessagesController < ApplicationController
   def room_message_params
     params.require(:room_message).permit(:content)
   end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/controllers/tasks_controller.rb
 --- START OF FILE ---
 # app/controllers/tasks_controller.rb
@@ -707,33 +728,33 @@ class TasksController < ApplicationController
 
   def index
     @current_profile = current_profile
-    
+
     # 1. 招待者・担当者を含めて一括取得（N+1対策）
-    query = Activity.where(actable_type: ['Task', 'Schedule'])
+    query = Activity.where(actable_type: [ "Task", "Schedule" ])
                     .visible_to(@current_profile)
                     .includes(
-                      :owner_profile, 
+                      :owner_profile,
                       actable: [
-                        :assignees, 
-                        { schedule_invitations: :profile } 
+                        :assignees,
+                        { schedule_invitations: :profile }
                       ]
                     )
                     .order(created_at: :desc)
 
     # フィルタリングロジック（変更なし）
     case params[:filter]
-    when 'today'
+    when "today"
       today = Time.current.all_day
       query = query.left_joins(:task_relation, :schedule_relation)
                 .where(tasks: { deadline: today })
                 .or(query.left_joins(:task_relation, :schedule_relation).where(schedules: { start_at: today }))
-    when 'week'
+    when "week"
       this_week = Time.current.beginning_of_day..7.days.from_now.end_of_day
       query = query.left_joins(:task_relation, :schedule_relation)
                   .where(tasks: { deadline: this_week })
                   # ↓ ここを schedule_at から start_at に修正
                   .or(query.left_joins(:task_relation, :schedule_relation).where(schedules: { start_at: this_week }))
-    when 'todo'
+    when "todo"
       query = query.joins(:task_relation).where(tasks: { task_status: :todo })
     end
 
@@ -742,15 +763,15 @@ class TasksController < ApplicationController
     # --- フォーム用オブジェクトの初期化 ---
     # Task: 23:30 デフォルト
     default_task_time = Time.current.change(hour: 23, min: 30)
-    @task = Task.new(deadline: default_task_time).tap { |t| 
-      t.build_activity(owner_profile: @current_profile, visibility_range: :is_private, status: :active) 
+    @task = Task.new(deadline: default_task_time).tap { |t|
+      t.build_activity(owner_profile: @current_profile, visibility_range: :is_private, status: :active)
     }
 
     # Schedule: 1時間後の正時をデフォルトに（例: 今が10:15なら11:00）
     default_schedule_time = Time.current.since(1.hour).change(min: 0)
     base_time = Time.current.since(1.hour).change(min: 0)
-    @schedule = Schedule.new(start_at: base_time, end_at: base_time.since(1.hour)).tap { |s| 
-      s.build_activity(owner_profile: @current_profile, visibility_range: :is_private, status: :active) 
+    @schedule = Schedule.new(start_at: base_time, end_at: base_time.since(1.hour)).tap { |s|
+      s.build_activity(owner_profile: @current_profile, visibility_range: :is_private, status: :active)
     }
   end
 
@@ -777,7 +798,7 @@ class TasksController < ApplicationController
       if @obj.is_a?(Schedule)
         @obj.schedule_invitations.find_by(profile: current_profile)&.join_status_approved!
       end
-      
+
       redirect_to tasks_path, notice: "#{ @obj.is_a?(Task) ? 'タスク' : '予定' }を作成しました"
     else
       index
@@ -788,9 +809,9 @@ class TasksController < ApplicationController
   def update
     @task = Task.find(params[:id])
     if @task.update(task_params)
-      redirect_to tasks_path, notice: 'ステータスを更新しました'
+      redirect_to tasks_path, notice: "ステータスを更新しました"
     else
-      redirect_to tasks_path, alert: '更新に失敗しました'
+      redirect_to tasks_path, alert: "更新に失敗しました"
     end
   end
 
@@ -803,11 +824,11 @@ class TasksController < ApplicationController
 
   def task_params
     params.require(:task).permit(
-      :task_status, :deadline, :describe, 
-      assignee_ids: [], 
+      :task_status, :deadline, :describe,
+      assignee_ids: [],
       activity_attributes: [
         :id,
-        :title, :visibility_range, :chat_room_id, 
+        :title, :visibility_range, :chat_room_id,
         :permission_type, :allow_comment, :allow_reaction, :status
       ]
     )
@@ -815,18 +836,19 @@ class TasksController < ApplicationController
 
   def schedule_params
     params.require(:schedule).permit(
-      :start_at, 
-      :end_at, 
-      :describe, 
+      :start_at,
+      :end_at,
+      :describe,
       :schedule_status,
       invitee_ids: [],
       activity_attributes: [
-        :id, :title, :visibility_range, :chat_room_id, 
+        :id, :title, :visibility_range, :chat_room_id,
         :permission_type, :allow_comment, :allow_reaction, :status
       ]
     )
   end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/controllers/comments_controller.rb
 --- START OF FILE ---
 # app/controllers/comments_controller.rb
@@ -834,39 +856,42 @@ class CommentsController < ApplicationController
   before_action :set_activity
 
   def create
+    # contentの取得元をフォームの構造に合わせて調整（もし social_post[content] で送っているならそのままでOK）
+    content = params.dig(:social_post, :content) || params.dig(:comment, :content)
+
     @comment = Comment.new(
-      content: params[:social_post][:content],
-      parent_id: params[:comment][:parent_id].presence
+        content: content,
+        parent_id: params.dig(:comment, :parent_id).presence
     )
 
     if @comment.save
-      Activity.create!(
+        Activity.create!(
         actable: @comment,
         owner_profile: current_profile,
         parent_activity_id: @activity.id,
         visibility_range: @activity.visibility_range,
         team_id: @activity.team_id,
-        status: "active"
-      )
-      
-      # --- 修正ポイント：URLパラメータを付けて戻る ---
-      referer_url = request.referer || root_path
-      uri = URI.parse(referer_url)
-      new_query = URI.decode_www_form(uri.query || "") << ["comment_open", "true"]
-      uri.query = URI.encode_www_form(new_query.uniq)
-      
-      redirect_to uri.to_s, notice: "コメントを投稿しました"
-      # ------------------------------------------
+        status: "active",
+        title: @comment.content.truncate(20)
+        )
+
+        # 遷移元が SocialPostの一覧か ChatRoom かを判別して thread_id を付与
+        if request.referer&.include?("chat_rooms")
+        redirect_to chat_room_path(@activity.chat_room, thread_id: @activity.id), notice: "返信しました"
+        else
+        # SocialPostの場合は filter も維持しつつ thread_id を渡す
+        redirect_to social_posts_path(filter: params[:filter], thread_id: @activity.id), notice: "コメントを投稿しました"
+        end
     else
-      redirect_back fallback_location: root_path, alert: "失敗しました"
+        redirect_back fallback_location: root_path, alert: "失敗しました"
     end
-  end
+    end
 
   def destroy
     # Activityを探して削除（紐づくCommentも一緒に消える設計ならActivityを消す）
     # もしCommentを消したいなら、Activityのactableを消す
-    @comment_activity = Activity.find_by(id: params[:id], actable_type: 'Comment')
-    
+    @comment_activity = Activity.find_by(id: params[:id], actable_type: "Comment")
+
     if @comment_activity&.owner_profile == current_profile
       @comment_activity.actable.destroy # 実体のCommentを削除
       @comment_activity.destroy         # 器のActivityを削除
@@ -881,24 +906,25 @@ class CommentsController < ApplicationController
   def set_activity
     @activity = Activity.find(params[:activity_id])
   end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/controllers/works_controller.rb
 --- START OF FILE ---
 # app/controllers/works_controller.rb
 class WorksController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_work, only: [:show, :edit, :update, :destroy]
+  before_action :set_work, only: [ :show, :edit, :update, :destroy ]
 
   def index
     @current_profile = current_profile
     # ActivityからWork型のものを取得し、権限で絞り込む
-    query = Activity.where(actable_type: 'Work').visible_to(@current_profile)
+    query = Activity.where(actable_type: "Work").visible_to(@current_profile)
 
     # フィルタリング
     case params[:filter]
-    when 'mine'
+    when "mine"
       query = query.where(owner_profile: @current_profile)
-    when 'shared'
+    when "shared"
       query = query.where.not(owner_profile: @current_profile)
     end
 
@@ -914,7 +940,7 @@ class WorksController < ApplicationController
   def create
     @work = Work.new(work_params)
     @note = Note.new(note_params) # note_paramsを使用
-    
+
     @work.actable = @note
     @work.activity.owner_profile = current_profile
     @work.activity.team = current_profile.team
@@ -948,11 +974,11 @@ class WorksController < ApplicationController
   def show
     @activity = @work.activity
     @note = @work.actable
-    
+
     # 閲覧権限チェック
     redirect_to works_path, alert: "アクセス権限がありません" unless @activity.visible_to?(current_profile)
   end
-  
+
   def destroy
     # オーナーのみ削除可能
     if @work.activity.owner_profile == current_profile
@@ -971,20 +997,21 @@ class WorksController < ApplicationController
 
   def work_params
     params.require(:work).permit(
-      activity_attributes: [:id, :title, :visibility_range, :chat_room_id, :permission_type, :allow_comment, :allow_reaction]
+      activity_attributes: [ :id, :title, :visibility_range, :chat_room_id, :permission_type, :allow_comment, :allow_reaction ]
     )
   end
 
   def note_params
     params.require(:note).permit(:content)
   end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/controllers/profiles_controller.rb
 --- START OF FILE ---
 # app/controllers/profiles_controller.rb
 class ProfilesController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_profile, only: [:edit, :update, :destroy, :switch]
+  before_action :set_profile, only: [ :edit, :update, :destroy, :switch ]
 
   def switch
     # 1. セッションを切り替える
@@ -1048,7 +1075,7 @@ class ProfilesController < ApplicationController
     end
 
     @profile.destroy
-    
+
     # 削除したのが現在選択中のプロフィールなら、残った最初のプロフィールに切り替え
     if session[:current_profile_id].to_i == @profile.id
       session[:current_profile_id] = current_user.profiles.first.id
@@ -1064,10 +1091,10 @@ class ProfilesController < ApplicationController
     @profile = current_user.profiles.find(params[:id])
 
     # 【重要】編集・更新アクション時、URLのIDが「選択中のID」と違う場合は強制リダイレクト
-    if ['edit', 'update'].include?(action_name)
+    if [ "edit", "update" ].include?(action_name)
       if @profile.id != current_profile.id
         # redirect_to の後に return がないと、この後のアクション処理も走ってしまいエラーになります
-        return redirect_to edit_profile_path(current_profile)
+        redirect_to edit_profile_path(current_profile)
       end
     end
   rescue ActiveRecord::RecordNotFound
@@ -1077,7 +1104,8 @@ class ProfilesController < ApplicationController
   def profile_params
     params.require(:profile).permit(:name, :label, :avatar)
   end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/controllers/likes_controller.rb
 --- START OF FILE ---
 # app/controllers/likes_controller.rb
@@ -1114,6 +1142,109 @@ class LikesController < ApplicationController
   def set_activity
     @activity = Activity.find(params[:activity_id])
   end
+end
+-e \n--- END OF FILE ---\n
+app/controllers/users/sessions_controller.rb
+--- START OF FILE ---
+# app/controllers/users/sessions_controller.rb
+class Users::SessionsController < Devise::SessionsController
+  def guest_sign_in
+    if old_user = User.find_by(email: "guest@example.com")
+      old_user.profiles.destroy_all 
+      old_user.destroy
+    end
+
+    user = User.find_or_create_by!(email: "guest@example.com") do |u|
+      u.password = SecureRandom.urlsafe_base64
+    end
+
+    # unless user.profiles.exists?
+      # 1. 仕事用 (Work)
+      p1 = user.profiles.create!(
+        label: "Work (本業)",
+        name: "Sato | Director",
+        profile_id: "sato_work_#{SecureRandom.hex(3)}",
+        status: 0,
+      )
+      attach_avatar_from_url(p1, "https://res.cloudinary.com/do5pu5yu6/image/upload/v1769949178/avatar_work_w03rhg.png")
+      p1.update(team: Team.find_by(display_name: "株式会社Forestly"))
+      
+      # ルーム所属
+      ["全社連絡", "開発部", "雑談"].each do |name|
+        if room = ChatRoom.find_by(display_name: name)
+          p1.room_memberships.create!(chat_room: room)
+        end
+      end
+
+      # --- ★ここからNPCとのやり取りを追加 ---
+      tanaka = Profile.find_by(profile_id: "tanaka_mgr")
+      takahashi = Profile.find_by(profile_id: "takahashi_dev")
+      watanabe = Profile.find_by(profile_id: "watanabe_des")
+      work_team = p1.team
+
+      if tanaka && work_team
+        # 田中さんからのタスク依頼
+        task = Task.create!(describe: "次期ロードマップの資料作成（ドラフト）", task_status: 1, deadline: 3.days.from_now)
+        Activity.create!(owner_profile: tanaka, team: work_team, title: "【担当依頼】ロードマップ作成", actable: task, visibility_range: 0)
+        TaskAssignee.create!(task: task, profile: p1)
+
+        # 渡辺さんからのNote
+        note = Note.create!(body: "Forestly UIガイドライン v1.0\n共通ルールです。#Design")
+        Activity.create!(owner_profile: watanabe, team: work_team, title: "UIデザイン規約を公開", actable: note, visibility_range: 0) if watanabe
+
+        # 高橋さんからの開発部メッセージ
+        if dev_room = ChatRoom.find_by(display_name: "開発部")
+          msg = RoomMessage.create!(content: "APIの結合テストが完了しました。")
+          Activity.create!(owner_profile: takahashi, team: work_team, title: "開発進捗報告", actable: msg, chat_room_id: dev_room.id, visibility_range: 1) if takahashi
+        end
+      end
+      # --- ★ここまで ---
+
+      # 2. プライベート用 (Private)
+      p2 = user.profiles.create!(
+        label: "Private (個人用)",
+        name: "Satomi",
+        profile_id: "satomi_private_#{SecureRandom.hex(3)}",
+        status: 0
+      )
+      attach_avatar_from_url(p2, "https://res.cloudinary.com/do5pu5yu6/image/upload/v1769949178/avatar_private_u147ut.png")
+      ["週末キャンプ会", "焚き火好き集まれ"].each do |name|
+        if room = ChatRoom.find_by(display_name: name)
+          p2.room_memberships.create!(chat_room: room)
+        end
+      end
+
+      # 3. 外部活動用 (School)
+      p3 = user.profiles.create!(
+        label: "School (料理教室)",
+        name: "Satomi @ Cooking",
+        profile_id: "satomi_cook_#{SecureRandom.hex(3)}",
+        status: 0
+      )
+      attach_avatar_from_url(p3, "https://res.cloudinary.com/do5pu5yu6/image/upload/v1769949178/avatar_school_mhhxwn.png")
+      p3.update(team: Team.find_by(display_name: "ABCクッキング"))
+      ["3月生クラス", "レシピ共有"].each do |name|
+        if room = ChatRoom.find_by(display_name: name)
+          p3.room_memberships.create!(chat_room: room)
+        end
+      end
+
+    guest_profile = user.profiles.find_by(label: "Work (本業)")
+    session[:current_profile_id] = guest_profile.id
+
+    sign_in user
+    redirect_to root_path, notice: "guest_mode"
+  end
+
+  private
+
+  def attach_avatar_from_url(profile, url)
+    require "open-uri"
+    file = URI.open(url)
+    profile.avatar.attach(io: file, filename: "avatar_#{profile.label}.png")
+  rescue => e
+    logger.error "Failed to attach avatar: #{e.message}"
+  end
 end-e \n--- END OF FILE ---\n
 app/controllers/users/registrations_controller.rb
 --- START OF FILE ---
@@ -1132,7 +1263,8 @@ class Users::RegistrationsController < Devise::RegistrationsController
     super
     # 必要に応じて保存後の追加ロジックをここに書けます
   end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/controllers/activities_controller.rb
 --- START OF FILE ---
 # app/controllers/activities_controller.rb
@@ -1141,29 +1273,30 @@ class ActivitiesController < ApplicationController
 
   def destroy
     @activity = Activity.find(params[:id])
-    
+
     # セキュリティ：作成者本人のみ削除可能
     if @activity.owner_profile == current_profile
       # activityを消せば、関連する task や schedule も dependent: :destroy で消えます
       @activity.destroy
-      redirect_to tasks_path, notice: '削除しました', status: :see_other
+      redirect_to tasks_path, notice: "削除しました", status: :see_other
     else
-      redirect_to tasks_path, alert: '削除する権限がありません', status: :forbidden
+      redirect_to tasks_path, alert: "削除する権限がありません", status: :forbidden
     end
   end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/controllers/schedules_controller.rb
 --- START OF FILE ---
 # app/controllers/schedules_controller.rb
 class SchedulesController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_schedule, only: [:edit, :update]
+  before_action :set_schedule, only: [ :edit, :update ]
 
   def create
     @schedule = Schedule.new(schedule_params)
     # 自分のIDを招待者に含める
     @schedule.invitee_ids = (@schedule.invitee_ids << current_profile.id).uniq
-    
+
     @schedule.build_activity if @schedule.activity.nil?
     @schedule.activity.owner_profile = current_profile
     @schedule.activity.team = current_profile.team
@@ -1202,33 +1335,34 @@ class SchedulesController < ApplicationController
 
   def schedule_params
     params.require(:schedule).permit(
-        :start_at, 
-        :end_at, 
-        :describe, 
+        :start_at,
+        :end_at,
+        :describe,
         :schedule_status,
         invitee_ids: [],
         activity_attributes: [
         :id,             # 編集には必須
         :title,          # タイトル更新に必要
-        :visibility_range, 
-        :chat_room_id, 
-        :permission_type, 
-        :allow_comment, 
+        :visibility_range,
+        :chat_room_id,
+        :permission_type,
+        :allow_comment,
         :allow_reaction
         ]
     )
     end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/controllers/team_invitations_controller.rb
 --- START OF FILE ---
 # app/contollers/team_invitations_controller.rb
 class TeamInvitationsController < ApplicationController
   before_action :authenticate_user!
-  before_action :ensure_team_admin, only: [:create, :cancel]
+  before_action :ensure_team_admin, only: [ :create, :cancel ]
 
   def search
     @target_profile = Profile.find_by(profile_id: params[:profile_id])
-    
+
     # 既存の create にあるバリデーション（チーム所属済みか等）を
     # ここでも行い、エラーならリダイレクトするロジックを共通化すると良いです
     if @target_profile.nil?
@@ -1295,7 +1429,7 @@ class TeamInvitationsController < ApplicationController
 
   def accept
     @invitation = TeamMembershipRequest.find(params[:id])
-    
+
     # 自分宛てかつ保留中であることを確認
     if @invitation.profile == current_profile && @invitation.pending?
       if current_profile.team.present?
@@ -1333,32 +1467,33 @@ class TeamInvitationsController < ApplicationController
       redirect_to members_team_path, alert: "管理者権限が必要です。"
     end
   end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/controllers/social_posts_controller.rb
 --- START OF FILE ---
 # app/controllers/social_posts_controller.rb
 class SocialPostsController < ApplicationController
   def index
     @current_profile = current_profile
-    @base_query = Activity.where(actable_type: 'SocialPost')
+    @base_query = Activity.where(actable_type: "SocialPost")
                        .includes(:owner_profile, actable: :source_post)
 
-    @no_team_scoped = params[:filter] == 'team' && @current_profile.team_id.blank?
+    @no_team_scoped = params[:filter] == "team" && @current_profile.team_id.blank?
 
     @activities = case params[:filter]
-                  when 'team'
+    when "team"
                     if @current_profile.team_id.present?
                        @base_query.where(visibility_range: :is_team, team_id: @current_profile.team_id).active
                     else
                         Activity.none
                     end
-                  when 'mine'
+    when "mine"
                     @base_query.where(owner_profile: @current_profile).active
-                  when 'draft'
+    when "draft"
                     @base_query.where(owner_profile: @current_profile).draft
-                  else
+    else
                     @base_query.visible_to(@current_profile).active
-                  end.order(created_at: :asc)
+    end.order(created_at: :asc)
   end
 
   def create
@@ -1404,7 +1539,7 @@ class SocialPostsController < ApplicationController
 
   def repost
     source_post = SocialPost.find(params[:id])
-    
+
     # 1. SocialRepostレコードを作成
     # 属性名は schema に合わせて source_post_id でも source_post でもOKですが
     # content の取得階層を修正します
@@ -1412,7 +1547,7 @@ class SocialPostsController < ApplicationController
         source_post: source_post,
         content: params.dig(:social_post, :content) # 階層を安全に取得
     )
-    
+
     if repost.save
         # 2. Activityレコードを作成
         # title も保存しておかないと一覧で困ることがあります
@@ -1422,7 +1557,7 @@ class SocialPostsController < ApplicationController
           owner_profile: current_profile,
           status: :active,
           visibility_range: params[:visibility_range] || source_post.visibility_range,
-          team_id: (params[:visibility_range] == 'is_team' ? current_profile.team_id : nil),
+          team_id: (params[:visibility_range] == "is_team" ? current_profile.team_id : nil),
           title: "Repost: #{source_post.content.truncate(10)}"
         )
         redirect_to social_posts_path, notice: "リポストしました"
@@ -1433,12 +1568,21 @@ class SocialPostsController < ApplicationController
     end
   end
 
+  def thread
+    @parent_post = SocialPost.find(params[:id])
+    @parent_activity = Activity.find_by(actable: @parent_post)
+    @comments = @parent_activity.comment_activities.includes(:owner_profile, :actable).order(created_at: :asc)
+
+    render partial: "social_posts/thread"
+  end
+
   private
 
   def social_post_params
     params.require(:social_post).permit(:content)
   end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/views/devise/unlocks/new.html.erb
 --- START OF FILE ---
 <h2>Resend unlock instructions</h2>
@@ -1605,6 +1749,23 @@ app/views/devise/sessions/new.html.erb
     <h1 class="text-5xl font-extrabold text-[#00a968] tracking-tight">Forestly</h1>
     <p class="mt-2 text-sm text-gray-500 font-medium">β版 Version.4</p>
     <h2 class="mt-6 text-2xl font-bold text-gray-900">Login</h2>
+
+    <!-- ゲストログイン用 -->
+    <%= button_to 'Forestlyとは？', guest_sign_in_path, method: :post, class: 'btn-guest-intro' %>
+
+    <style>
+    /* ポートフォリオ用に少し目立たせるスタイル例 */
+    .btn-guest-intro {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #28a745; /* 清潔感のある緑 */
+      color: white;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    </style>
   </div>
 
   <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -1846,7 +2007,7 @@ app/views/tasks/index.html.erb
               class="px-4 py-2 rounded-lg text-sm font-bold transition-all">新規タスク</button>
       <button type="button" @click="open_form = (open_form === 'schedule' ? null : 'schedule')" 
               :class="open_form === 'schedule' ? 'bg-blue-100 text-blue-700' : 'bg-blue-600 text-white'"
-              class="px-4 py-2 rounded-lg text-sm font-bold transition-all">新規予定</button>
+              class="px-4 py-2 rounded-lg text-sm font-bold transition-all">新規スケジュール</button>
     </div>
   </header>
 
@@ -1990,23 +2151,45 @@ app/views/tasks/index.html.erb
 app/views/tasks/_sidebar.html.erb
 --- START OF FILE ---
 <!-- app/views/tasks/_sidebar.html.erb -->
-<p class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tasks & Schedules</p>
+<nav class="space-y-1">
+  <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Tasks & Schedules</p>
 
-<%= link_to tasks_path(filter: 'today'), class: "group flex items-center px-3 py-2 text-sm font-medium rounded-md #{params[:filter] == 'today' ? 'bg-emerald-50 text-[#00a968]' : 'text-gray-600 hover:bg-gray-50'}" do %>
-  今日のタスクとイベント
-<% end %>
+  <%# 今日のタスク %>
+  <%= link_to tasks_path(filter: 'today'), 
+      class: "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors #{params[:filter] == 'today' ? 'bg-emerald-100 text-emerald-900' : 'text-gray-700 hover:bg-gray-100'}" do %>
+    <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+    今日のタスクとイベント
+  <% end %>
 
-<%= link_to tasks_path(filter: 'week'), class: "group flex items-center px-3 py-2 text-sm font-medium rounded-md #{params[:filter] == 'week' ? 'bg-emerald-50 text-[#00a968]' : 'text-gray-600 hover:bg-gray-50'}" do %>
-  今週のタスクとイベント
-<% end %>
+  <%# 今週のタスク %>
+  <%= link_to tasks_path(filter: 'week'), 
+      class: "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors #{params[:filter] == 'week' ? 'bg-emerald-100 text-emerald-900' : 'text-gray-700 hover:bg-gray-100'}" do %>
+    <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+    </svg>
+    今週のタスクとイベント
+  <% end %>
 
-<%= link_to tasks_path, class: "group flex items-center px-3 py-2 text-sm font-medium rounded-md #{params[:filter].blank? ? 'bg-emerald-50 text-[#00a968]' : 'text-gray-600 hover:bg-gray-50'}" do %>
-  全てのタスクとイベント
-<% end %>
+  <%# 全てのタスク %>
+  <%= link_to tasks_path, 
+      class: "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors #{params[:filter].blank? ? 'bg-emerald-100 text-emerald-900' : 'text-gray-700 hover:bg-gray-100'}" do %>
+    <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+    </svg>
+    全てのタスクとイベント
+  <% end %>
 
-<%= link_to tasks_path(filter: 'todo'), class: "group flex items-center px-3 py-2 text-sm font-medium rounded-md #{params[:filter] == 'todo' ? 'bg-emerald-50 text-[#00a968]' : 'text-gray-600 hover:bg-gray-50'}" do %>
-  未完了のタスク
-<% end %>-e \n--- END OF FILE ---\n
+  <%# 未完了のタスク %>
+  <%= link_to tasks_path(filter: 'todo'), 
+      class: "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors #{params[:filter] == 'todo' ? 'bg-emerald-100 text-emerald-900' : 'text-gray-700 hover:bg-gray-100'}" do %>
+    <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    未完了のタスク
+  <% end %>
+</nav>-e \n--- END OF FILE ---\n
 app/views/tasks/edit.html.erb
 --- START OF FILE ---
 <%# app/views/tasks/edit.html.erb %>
@@ -2178,17 +2361,15 @@ app/views/components/_schedule_form.html.erb
   roomId: '<%= schedule.activity&.chat_room_id %>' 
 }" class="space-y-6 text-left">
 
-  <%# urlを削除し、モデルから自動判別。scopeを保持するためにx-dataと連携 %>
   <%= form_with(model: schedule, url: schedule.persisted? ? schedule_path(schedule) : schedules_path, class: "space-y-4") do |f| %>
     <%= f.fields_for :activity do |af| %>
-      <%# 更新に必須のIDを追加 %>
       <%= af.hidden_field :id %>
 
       <%# --- タイトル --- %>
       <%= af.text_field :title, placeholder: "予定のタイトル...", class: "w-full border-none focus:ring-0 text-xl font-bold placeholder-gray-300 p-0 bg-transparent" %>
 
       <div class="py-4 border-y border-gray-100 space-y-4">
-        <%# --- 日時設定 (2カラム並列) --- %>
+        <%# --- 日時設定 --- %>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">開始日時</label>
@@ -2204,7 +2385,6 @@ app/views/components/_schedule_form.html.erb
         <div>
           <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">公開範囲</label>
           <% 
-            # 定義する順番を並べ替えたい順にする
             options = { "is_private" => "プライベート" }
             options["is_team"] = "チームメンバー" if @current_profile.team.present?
             options["is_chat_room"] = "ルームメンバー"
@@ -2217,13 +2397,24 @@ app/views/components/_schedule_form.html.erb
         </div>
       </div>
 
-      <%# --- ルーム選択 --- %>
+      <%# --- ルーム選択 (アバター表示追加) --- %>
       <template x-if="scope === 'is_chat_room'">
         <div class="bg-blue-50 p-4 rounded-xl space-y-3 mb-4 shadow-inner">
           <label class="block text-xs font-bold text-blue-700">対象のルームを選択</label>
-          <%= af.collection_select :chat_room_id, @current_profile.chat_rooms, :id, :display_name, 
-              { prompt: "ルームを選択してください" }, 
-              { "x-model": "roomId", class: "w-full border-blue-200 rounded-lg text-sm" } %>
+          <div class="relative">
+            <%= af.collection_select :chat_room_id, @current_profile.chat_rooms, :id, :display_name, 
+                { prompt: "ルームを選択してください" }, 
+                { "x-model": "roomId", class: "w-full border-blue-200 rounded-lg text-sm pl-3 pr-10 appearance-none bg-white h-11" } %>
+            
+            <%# ルームアバターの動的表示 %>
+            <div class="absolute right-10 top-1/2 -translate-y-1/2 pointer-events-none">
+              <% @current_profile.chat_rooms.each do |room| %>
+                <div x-show="roomId == '<%= room.id %>'">
+                  <%= profile_avatar_tag(room, class: "h-6 w-6 rounded shadow-sm object-cover", size: 24) %>
+                </div>
+              <% end %>
+            </div>
+          </div>
         </div>
       </template>
 
@@ -2231,26 +2422,26 @@ app/views/components/_schedule_form.html.erb
       <div class="flex gap-4 items-center bg-gray-50 p-3 rounded-lg">
         <div class="flex-1">
           <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">許可する操作</label>
-          <div class="flex gap-4">
+          <div class="flex gap-6">
             <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-              <%= af.radio_button :permission_type, :read_only %> 閲覧のみ
+              <%= af.radio_button :permission_type, :read_only, class: "text-blue-600 focus:ring-blue-500" %> 閲覧のみ
             </label>
             <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-              <%= af.radio_button :permission_type, :edit_only %> 閲覧・編集
+              <%= af.radio_button :permission_type, :edit_only, class: "text-blue-600 focus:ring-blue-500" %> 閲覧・編集
             </label>
           </div>
         </div>
       </div>
     <% end %>
 
-    <%# --- 招待者設定 --- %>
+    <%# --- 招待者設定 (アバター表示追加) --- %>
     <div class="space-y-3 pt-2">
       <label class="block text-[10px] font-bold text-gray-400 uppercase">参加者の招待</label>
       <div class="space-y-3">
         <%# 自分 %>
-        <div class="flex items-center gap-2 p-2 border border-blue-100 bg-blue-50 rounded-lg w-fit">
+        <div class="flex items-center gap-3 p-2 border border-blue-100 bg-blue-50 rounded-lg w-fit pr-4">
+          <%= profile_avatar_tag(@current_profile, class: "h-6 w-6 rounded-full shadow-sm", size: 24) %>
           <span class="text-xs font-bold text-blue-700"><%= @current_profile.name %> (自分)</span>
-          <%# Railsの仕様に合わせ、初期値に関わらず自身のIDをhiddenで送るか、チェック済みチェックボックスにする %>
           <%= f.hidden_field :invitee_ids, name: "schedule[invitee_ids][]", value: @current_profile.id %>
         </div>
 
@@ -2259,9 +2450,10 @@ app/views/components/_schedule_form.html.erb
           <div class="grid grid-cols-2 gap-2">
             <% if @current_profile.team.present? %>
               <% @current_profile.team.profiles.where.not(id: @current_profile.id).each do |profile| %>
-                <label class="flex items-center gap-2 text-xs text-gray-700 bg-white p-2 rounded border border-gray-100 cursor-pointer hover:bg-gray-50">
-                  <%= f.check_box :invitee_ids, { name: "schedule[invitee_ids][]", class: "rounded text-blue-600" }, profile.id, nil %>
-                  <%= profile.name %>
+                <label class="flex items-center gap-3 text-xs text-gray-700 bg-white p-2 rounded border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors">
+                  <%= f.check_box :invitee_ids, { name: "schedule[invitee_ids][]", class: "rounded text-blue-600 focus:ring-blue-500" }, profile.id, nil %>
+                  <%= profile_avatar_tag(profile, class: "h-6 w-6 rounded-full shadow-sm", size: 24) %>
+                  <span class="truncate"><%= profile.name %></span>
                 </label>
               <% end %>
             <% end %>
@@ -2274,9 +2466,10 @@ app/views/components/_schedule_form.html.erb
             <template x-if="roomId == '<%= room.id %>'">
               <div class="grid grid-cols-2 gap-2">
                 <% room.profiles.where.not(id: @current_profile.id).each do |profile| %>
-                  <label class="flex items-center gap-2 text-xs text-gray-700 bg-white p-2 rounded border border-blue-100 cursor-pointer hover:bg-gray-50">
-                    <%= f.check_box :invitee_ids, { name: "schedule[invitee_ids][]", class: "rounded text-blue-600" }, profile.id, nil %>
-                    <%= profile.name %>
+                  <label class="flex items-center gap-3 text-xs text-gray-700 bg-white p-2 rounded border border-blue-100 cursor-pointer hover:bg-blue-50 transition-colors">
+                    <%= f.check_box :invitee_ids, { name: "schedule[invitee_ids][]", class: "rounded text-blue-600 focus:ring-blue-500" }, profile.id, nil %>
+                    <%= profile_avatar_tag(profile, class: "h-6 w-6 rounded-full shadow-sm", size: 24) %>
+                    <span class="truncate"><%= profile.name %></span>
                   </label>
                 <% end %>
               </div>
@@ -2286,16 +2479,14 @@ app/views/components/_schedule_form.html.erb
       </div>
     </div>
 
-    <%= f.text_area :describe, placeholder: "詳細（場所やメモなど）", class: "w-full border-gray-200 rounded-lg text-sm mt-4", rows: 3 %>
+    <%= f.text_area :describe, placeholder: "詳細（場所やメモなど）", class: "w-full border-gray-200 rounded-lg text-sm mt-4 focus:ring-blue-500 focus:border-blue-500", rows: 3 %>
 
     <div class="flex justify-end gap-2 pt-4">
       <% if schedule.persisted? %>
-        <%# 編集時はTurbo Frameを抜けるのではなく、単に一覧（index）を再取得して自分を閉じる %>
-        <%= link_to 'キャンセル', tasks_path, class: "text-sm text-gray-500 px-4 font-bold flex items-center" %>
+        <%= link_to 'キャンセル', schedules_path, class: "text-sm text-gray-500 px-4 font-bold flex items-center" %>
       <% else %>
         <button type="button" @click="open_form = null" class="text-sm text-gray-500 px-4 font-bold">キャンセル</button>
       <% end %>
-      
       <%= f.submit schedule.persisted? ? "予定を更新" : "予定を保存", class: "bg-blue-600 text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-blue-100 cursor-pointer hover:bg-blue-700 transition-colors" %>
     </div>
   <% end %>
@@ -2380,7 +2571,6 @@ app/views/components/_task_form.html.erb
         <div>
           <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">閲覧・編集の範囲</label>
           <% 
-            # 表示したい順番に定義
             options = { "is_private" => "プライベート" }
             options["is_team"] = "チームメンバー" if @current_profile.team.present?
             options["is_chat_room"] = "ルームメンバー"
@@ -2393,13 +2583,28 @@ app/views/components/_task_form.html.erb
         </div>
       </div>
 
-      <%# --- 追加: ルーム選択 (ルームメンバー選択時のみ表示) --- %>
+      <%# --- ルーム選択 (アバター付き) --- %>
       <template x-if="scope === 'is_chat_room'">
         <div class="bg-emerald-50 p-4 rounded-xl space-y-3 mb-4 shadow-inner">
-          <label class="block text-xs font-bold text-emerald-700">対象のルームを選択</label>
-          <%= af.collection_select :chat_room_id, @current_profile.chat_rooms, :id, :display_name, 
-              { prompt: "ルームを選択してください" }, 
-              { "x-model": "roomId", class: "w-full border-emerald-200 rounded-lg text-sm" } %>
+          <label class="block text-xs font-bold text-emerald-700 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+            対象のルームを選択
+          </label>
+          
+          <div class="relative">
+            <%= af.collection_select :chat_room_id, @current_profile.chat_rooms, :id, :display_name, 
+                { prompt: "ルームを選択してください" }, 
+                { "x-model": "roomId", class: "w-full border-emerald-200 rounded-lg text-sm pl-3 pr-10 appearance-none bg-white h-11" } %>
+            
+            <%# 選択中のルームアバターを表示 %>
+            <div class="absolute right-10 top-1/2 -translate-y-1/2 pointer-events-none">
+              <% @current_profile.chat_rooms.each do |room| %>
+                <div x-show="roomId == '<%= room.id %>'">
+                  <%= profile_avatar_tag(room, class: "h-6 w-6 rounded shadow-sm object-cover", size: 24) %>
+                </div>
+              <% end %>
+            </div>
+          </div>
         </div>
       </template>
 
@@ -2407,49 +2612,54 @@ app/views/components/_task_form.html.erb
       <div class="flex gap-4 items-center bg-gray-50 p-3 rounded-lg">
         <div class="flex-1">
           <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">許可する操作</label>
-          <div class="flex gap-4">
-            <label class="flex items-center gap-2 text-sm text-gray-600">
-              <%= af.radio_button :permission_type, :read_only %> 閲覧のみ
+          <div class="flex gap-6">
+            <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <%= af.radio_button :permission_type, :read_only, class: "text-emerald-600 focus:ring-emerald-500" %> 閲覧のみ
             </label>
-            <label class="flex items-center gap-2 text-sm text-gray-600">
-              <%= af.radio_button :permission_type, :edit_only %> 閲覧・編集
+            <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <%= af.radio_button :permission_type, :edit_only, class: "text-emerald-600 focus:ring-emerald-500" %> 閲覧・編集
             </label>
           </div>
         </div>
       </div>
     <% end %>
 
-    <%# --- 担当者設定 --- %>
+    <%# --- 担当者設定 (アバター付き) --- %>
     <div class="space-y-3 pt-2">
       <label class="block text-[10px] font-bold text-gray-400 uppercase">担当者設定</label>
       <div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
         <div class="grid grid-cols-2 gap-2">
           <%# 自分 %>
-          <label class="flex items-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 p-2 rounded border border-emerald-100 cursor-pointer">
+          <label class="flex items-center gap-3 text-xs font-bold text-emerald-700 bg-emerald-50 p-2 rounded border border-emerald-100 cursor-pointer">
             <%= f.check_box :assignee_ids, { name: "task[assignee_ids][]", class: "rounded text-emerald-600" }, @current_profile.id, nil %>
-            <%= @current_profile.name %> (自分)
+            <%= profile_avatar_tag(@current_profile, class: "h-6 w-6 rounded-full shadow-sm", size: 24) %>
+            <span class="truncate"><%= @current_profile.name %> (自分)</span>
           </label>
 
-          <%# 追加: チームメンバー候補 (x-showを追加) %>
+          <%# チームメンバー %>
           <template x-if="scope === 'is_team'">
             <% if @current_profile.team.present? %>
-              <% @current_profile.team.profiles.where.not(id: @current_profile.id).each do |profile| %>
-                <label class="flex items-center gap-2 text-xs text-gray-700 bg-white p-2 rounded border border-gray-100 cursor-pointer hover:bg-gray-50">
-                  <%= f.check_box :assignee_ids, { name: "task[assignee_ids][]", class: "rounded text-emerald-600" }, profile.id, nil %>
-                  <%= profile.name %>
-                </label>
-              <% end %>
+              <div class="contents">
+                <% @current_profile.team.profiles.where.not(id: @current_profile.id).each do |profile| %>
+                  <label class="flex items-center gap-3 text-xs text-gray-700 bg-white p-2 rounded border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors">
+                    <%= f.check_box :assignee_ids, { name: "task[assignee_ids][]", class: "rounded text-emerald-600" }, profile.id, nil %>
+                    <%= profile_avatar_tag(profile, class: "h-6 w-6 rounded-full shadow-sm", size: 24) %>
+                    <span class="truncate"><%= profile.name %></span>
+                  </label>
+                <% end %>
+              </div>
             <% end %>
           </template>
 
-          <%# 追加: ルームメンバー候補 (x-showとroomId判定を追加) %>
+          <%# ルームメンバー %>
           <template x-if="scope === 'is_chat_room' && roomId">
             <% @current_profile.chat_rooms.each do |room| %>
               <div x-show="roomId == '<%= room.id %>'" class="contents">
                 <% room.profiles.where.not(id: @current_profile.id).each do |profile| %>
-                  <label class="flex items-center gap-2 text-xs text-gray-700 bg-white p-2 rounded border border-emerald-100 cursor-pointer hover:bg-emerald-50">
+                  <label class="flex items-center gap-3 text-xs text-gray-700 bg-white p-2 rounded border border-emerald-100 cursor-pointer hover:bg-emerald-50 transition-colors">
                     <%= f.check_box :assignee_ids, { name: "task[assignee_ids][]", class: "rounded text-emerald-600" }, profile.id, nil %>
-                    <%= profile.name %>
+                    <%= profile_avatar_tag(profile, class: "h-6 w-6 rounded-full shadow-sm", size: 24) %>
+                    <span class="truncate"><%= profile.name %></span>
                   </label>
                 <% end %>
               </div>
@@ -2459,7 +2669,7 @@ app/views/components/_task_form.html.erb
       </div>
     </div>
 
-    <%= f.text_area :describe, placeholder: "詳細（任意）", class: "w-full border-gray-200 rounded-lg text-sm mt-4", rows: 3 %>
+    <%= f.text_area :describe, placeholder: "詳細（任意）", class: "w-full border-gray-200 rounded-lg text-sm mt-4 focus:ring-emerald-500 focus:border-emerald-500", rows: 3 %>
 
     <div class="flex justify-end gap-2 pt-4">
       <% if task.persisted? %>
@@ -2467,7 +2677,7 @@ app/views/components/_task_form.html.erb
       <% else %>
         <button type="button" @click="open_form = null" class="text-sm text-gray-500 px-4 font-bold">キャンセル</button>
       <% end %>
-      <%= f.submit task.persisted? ? "更新する" : "タスクを保存", class: "bg-emerald-600 text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-emerald-100 cursor-pointer" %>
+      <%= f.submit task.persisted? ? "更新する" : "タスクを保存", class: "bg-emerald-600 text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-emerald-100 cursor-pointer hover:bg-emerald-700 transition-colors" %>
     </div>
   <% end %>
 </div>-e \n--- END OF FILE ---\n
@@ -2483,463 +2693,408 @@ app/views/social_posts/index.html.erb
 <style>
   main { overflow: hidden !important; height: 100% !important; }
   main > div { padding: 0 !important; max-width: none !important; height: 100% !important; }
+  
   .slack-scrollbar::-webkit-scrollbar { width: 8px; }
   .slack-scrollbar::-webkit-scrollbar-track { background: transparent; }
   .slack-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+
+  .chat-layout-container { display: flex; width: 100%; height: 100%; overflow: hidden; }
+  .main-chat-area { flex: 1; display: flex; flex-direction: column; min-width: 0; transition: all 0.2s ease-in-out; }
+  #thread_panel { width: 0; background: white; display: none; flex-direction: column; border-left: 1px solid #e5e7eb; transition: width 0.2s ease-in-out; }
+  #thread_panel.show { width: 450px; display: flex; }
   .chat-input-container { overflow: visible !important; }
   .draft-dropdown { z-index: 100; }
 </style>
 
-<div class="flex flex-col h-full bg-white overflow-hidden relative">
-  <header class="flex-shrink-0 h-16 px-6 border-b border-gray-200 flex justify-between items-center bg-white z-10 shadow-sm">
-    <div class="flex items-center gap-3">
-      <div class="h-8 w-8 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-        </svg>
+<div class="chat-layout-container" id="social_container" data-open-thread-id="<%= params[:thread_id] %>">
+  
+  <div class="main-chat-area">
+    <header class="flex-shrink-0 h-16 px-6 border-b border-gray-200 flex justify-between items-center bg-white z-10 shadow-sm">
+      <div class="flex items-center gap-3">
+        <div class="h-8 w-8 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 font-bold">S</div>
+        <h2 class="font-black text-gray-900 text-lg">
+          <%= case params[:filter]
+              when 'team' then 'チームのタイムライン'
+              when 'mine' then '自分の投稿'
+              when 'draft' then '下書き一覧'
+              else '全ての投稿'
+              end %>
+        </h2>
       </div>
-      <h2 class="font-black text-gray-900 text-lg">
-        <%= case params[:filter]
-            when 'team' then 'チームのタイムライン'
-            when 'mine' then '自分の投稿'
-            when 'draft' then '下書き一覧'
-            else '全ての投稿'
-            end %>
-      </h2>
-    </div>
-  </header>
+    </header>
 
     <div class="flex-1 overflow-y-auto bg-white slack-scrollbar" id="messages_area">
       <div class="py-6">
         <% if @no_team_scoped %>
-        <%# --- 1. チーム未所属時の表示 --- %>
-        <div class="flex flex-col items-center justify-center py-20 px-6 text-center">
-            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            </div>
+          <div class="flex flex-col items-center justify-center py-20 px-6 text-center">
             <h3 class="text-lg font-bold text-gray-900 mb-2">チームに所属していません</h3>
-            <p class="text-sm text-gray-500 max-w-xs mb-6">
-            チーム限定のポストを表示するには、チームを作成するか、既存のチームに参加する必要があります。
-            </p>
-            <%= link_to new_team_path, class: "px-4 py-2 bg-[#00a968] text-white rounded-md text-sm font-bold hover:bg-[#008f58] transition-colors" do %>
-            チームを作成する
-            <% end %>
-        </div>
-
-        <% else %>
-        <%# --- 2. タイムライン表示 --- %>
-        <% @activities.each do |activity| %>
-            <div class="flex items-start px-6 py-2 hover:bg-gray-50 transition-colors group relative">
-                <div class="flex-shrink-0 mr-4 mt-1">
-                <%= profile_avatar_tag(activity.owner_profile, class: "h-10 w-10 rounded shadow-sm", size: 40) %>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-baseline gap-2 mb-0.5">
-                        <span class="font-black text-gray-900 text-[15px]"><%= activity.owner_profile.name %></span>
-                        <span class="text-[11px] text-gray-400 font-medium"><%= activity.created_at.strftime("%H:%M") %></span>
-                        <% if activity.is_team? %>
-                        <span class="text-[9px] bg-blue-50 text-blue-500 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Team</span>
-                        <% end %>
-                    </div>
-
-                    <%# 表示の出し分け %>
-                    <div class="text-gray-800 text-[15px] leading-relaxed break-words">
-                    <% if activity.actable.is_a?(SocialRepost) %>
-                        <%# 自分の引用コメントがある場合は表示 %>
-                        <% if activity.actable.content.present? %>
-                        <div class="mb-2"><%= simple_format(activity.actable.content, {}, wrapper_tag: "span") %></div>
-                        <% end %>
-
-                        <%# 引用カードデザイン（元投稿の有無で出し分け） %>
-                        <div class="border border-gray-200 rounded-lg p-3 bg-gray-50 mt-1 mb-1">
-                        <% if activity.actable.source_post.present? %>
-                            <%# --- 元投稿が存在する場合 --- %>
-                            <div class="flex items-center gap-2 mb-1">
-                            <span class="font-bold text-xs text-gray-700">
-                                <%= activity.actable.source_post.owner_profile.name %>
-                            </span>
-                            </div>
-                            <div class="text-sm text-gray-600">
-                            <%= simple_format(activity.actable.source_post.content, {}, wrapper_tag: "span") %>
-                            </div>
-                        <% else %>
-                            <%# --- 元投稿が削除された場合 --- %>
-                            <div class="flex items-center gap-2 text-gray-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                            <span class="text-xs font-medium italic">この投稿は削除されました</span>
-                            </div>
-                        <% end %>
-                        </div>
-                    <% else %>
-                        <%# 通常の投稿表示 %>
-                        <%= simple_format(activity.actable.content, {}, wrapper_tag: "span") %>
-                    <% end %>
-                    </div>
-
-                    <div class="mt-2 flex flex-col gap-2">
-                        <div class="flex items-center gap-4">
-                            <%# いいねボタン（トグル） %>
-                            <%= button_to activity_likes_path(activity), method: :post, class: "flex items-center gap-1 text-[12px] font-bold #{activity.like_activities.exists?(owner_profile: my_current_profile) ? 'text-pink-500' : 'text-gray-400 hover:text-pink-500'}" do %>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 <%= 'fill-current' if activity.like_activities.exists?(owner_profile: my_current_profile) %>" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                            <span><%= activity.likes_count if activity.likes_count > 0 %></span>
-                            <% end %>
-
-                            <%# 返信ボタン（下のフォームを返信モードにする） %>
-                            <button type="button" 
-                                    onclick="setReplyMode('<%= activity.id %>', '<%= j activity.actable.content.truncate(20) %>', '<%= activity.owner_profile.name %>')" 
-                                    class="flex items-center gap-1 text-[12px] font-bold text-gray-400 hover:text-blue-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-                            <span><%= activity.comments_count if activity.comments_count > 0 %></span>
-                            </button>
-                        </div>
-
-                        <%# コメントツリー表示 %>
-                        <% if activity.comment_activities.any? %>
-                            <div class="mt-1 space-y-2 ml-2 border-l-2 border-gray-100 pl-4">
-                            <% activity.comment_activities.where(actable: Comment.where(parent_id: nil)).each do |c_act| %>
-                                <div class="text-[13px]">
-                                <span class="font-bold text-gray-900"><%= c_act.owner_profile.name %></span>
-                                <span class="text-gray-600 ml-1"><%= c_act.actable.content %></span>
-                                
-                                <%# 2階層目（返信） %>
-                                <% c_act.actable.replies.each do |reply| %>
-                                    <div class="mt-1 text-[12px] flex items-center gap-2">
-                                    <span class="text-gray-400">└</span>
-                                    <span class="font-bold text-gray-800"><%= reply.activity.owner_profile.name %></span>
-                                    <span class="text-gray-600"><%= reply.content %></span>
-                                    </div>
-                                <% end %>
-
-                                <%# 2階層目への返信ボタン %>
-                                <button onclick="setReplyMode('<%= activity.id %>', '<%= j c_act.actable.content.truncate(20) %>', '<%= c_act.owner_profile.name %>', '<%= c_act.actable_id %>')" 
-                                        class="text-[10px] text-blue-400 font-bold ml-2 hover:underline">返信する</button>
-                                </div>
-                            <% end %>
-                            </div>
-                        <% end %>
-                    </div>
-                </div>
-
-                <%# ホバーアクションボタン群 %>
-                <div class="absolute right-6 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                <%# リポストボタン（全員に表示） %>
-                <button type="button" 
-                        onclick="setRepostMode('<%= activity.actable.id %>', '<%= j (activity.actable.is_a?(SocialRepost) ? activity.actable.source_post.content : activity.actable.content).truncate(30) %>', '<%= activity.owner_profile.name %>')" 
-                        class="p-1.5 bg-white border border-gray-200 rounded shadow-sm hover:bg-emerald-50 text-gray-500 hover:text-emerald-600"
-                        title="リポスト">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                </button>
-
-                <% if activity.owner_profile == my_current_profile %>
-                    <button type="button" 
-                            onclick="setEditMode('<%= activity.actable.id %>', '<%= j activity.actable.content %>', '<%= activity.visibility_range %>')" 
-                            class="p-1.5 bg-white border border-gray-200 rounded shadow-sm hover:bg-gray-50 text-gray-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                    </button>
-                    <%= link_to social_post_path(activity.actable), data: { turbo_method: :delete, turbo_confirm: "この投稿を削除しますか？" }, class: "p-1.5 bg-white border border-gray-200 rounded shadow-sm hover:bg-red-50 text-gray-400 hover:text-red-500" do %>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    <% end %>
-                <% end %>
-                </div>
-            </div>
-        <% end %>
-
-        <%# --- 3. 投稿が0件の場合の表示 --- %>
-        <% if @activities.empty? %>
-            <div class="flex flex-col items-center justify-center py-20 px-6 text-center text-gray-400">
-            <p class="text-sm font-medium">まだ投稿がありません</p>
-            </div>
-        <% end %>
-
-        <% end %> <%# if @no_team_scoped の else を閉じる %>
-      </div>
-    </div>
-
-  <footer class="flex-shrink-0 px-6 py-4 border-t border-gray-100 bg-white">
-    <%= form_with(model: SocialPost.new, url: social_posts_path(filter: params[:filter]), id: "chat_form", class: "relative") do |f| %>
-        <input type="hidden" name="post_id" id="editing_message_id" value="">
-        <input type="hidden" name="source_post_id" id="repost_source_id" value="">
-        <input type="hidden" name="comment[parent_id]" id="comment_parent_id" value="">
-        <input type="hidden" name="commit_type" id="commit_type" value="publish">
-      
-    <div id="edit_label" class="hidden flex items-center justify-between mb-1 px-1 text-[11px] font-bold text-[#00a968]">
-      <span>ポストを編集/再開中 (Escで解除)</span>
-    </div>
-    <div id="reply_preview" class="hidden flex items-center justify-between mb-2 p-2 bg-blue-50 border border-blue-100 rounded text-[11px] text-blue-700">
-      <div class="flex flex-col min-w-0">
-        <span class="font-bold">💬 <span id="reply_user_name"></span> さんの投稿に返信中</span>
-        <span id="reply_text_preview" class="truncate opacity-70"></span>
-      </div>
-      <button type="button" onclick="clearReplyMode()" class="ml-2 text-blue-500 hover:text-blue-700 font-black text-sm">×</button>
-    </div>
-    <div id="repost_preview" class="hidden flex items-center justify-between mb-2 p-2 bg-emerald-50 border border-emerald-100 rounded text-[11px] text-emerald-700">
-      <div class="flex flex-col min-w-0">
-        <span class="font-bold">♻️ <span id="repost_user_name"></span> さんのポストをリポスト中</span>
-        <span id="repost_text_preview" class="truncate opacity-70"></span>
-      </div>
-      <button type="button" onclick="clearRepostMode()" class="ml-2 text-emerald-500 hover:text-emerald-700 font-black text-sm">×</button>
-    </div>
-
-      <div class="border-2 border-gray-200 rounded-lg focus-within:border-[#00a968] transition-all bg-white chat-input-container">
-        <%= f.text_area :content, 
-            placeholder: "今の気持ちをシェアしましょう", 
-            rows: 1,
-            class: "block w-full border-none focus:ring-0 py-3 px-4 text-[15px] resize-none min-h-[44px] rounded-t-lg",
-            id: "message_textarea" %>
-        
-        <div class="flex items-center justify-between px-2 py-1.5 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 rounded-b-lg">
-          <div class="flex items-center gap-4 ml-2">
-            <label class="flex items-center gap-1.5 cursor-pointer hover:text-gray-600 font-bold">
-              <%= radio_button_tag :visibility_range, :is_public, true, class: "text-[#00a968] focus:ring-[#00a968] h-3 w-3" %> 公開
-            </label>
-            <label class="flex items-center gap-1.5 font-bold <%= my_current_profile.team_id.present? ? 'cursor-pointer hover:text-gray-600' : 'cursor-not-allowed text-gray-300' %>">
-                <%= radio_button_tag :visibility_range, :is_team, false, 
-                    disabled: my_current_profile.team_id.blank?,
-                    class: "text-[#00a968] focus:ring-[#00a968] h-3 w-3 disabled:bg-gray-200 disabled:border-gray-200" %> 
-                <span>チーム</span>
-                <% if my_current_profile.team_id.blank? %>
-                <span class="text-[9px] font-medium text-gray-400 bg-gray-100 px-1 rounded ml-1">(チーム未所属)</span>
-                <% end %>
-            </label>
-            <span class="border-l border-gray-300 h-3 mx-1"></span>
-            <span class="hidden sm:inline"><strong>Enter</strong> で改行 / <strong>Shift + Enter</strong> で送信</span>
+            <%= link_to "チームを作成する", new_team_path, class: "px-4 py-2 bg-[#00a968] text-white rounded-md text-sm font-bold" %>
           </div>
-          
-          <div class="flex items-center gap-2">
-            <%# 下書きトレイ (SocialPost用フィルタ) %>
-            <% my_drafts = Activity.where(actable_type: 'SocialPost', owner_profile: my_current_profile).draft.order(updated_at: :desc) %>
-            <details class="relative group">
-              <summary class="list-none cursor-pointer px-2 py-1 hover:bg-gray-200 rounded text-gray-600 font-bold transition-colors flex items-center gap-1">
-                <span>下書きトレイ</span>
-                <span class="bg-gray-300 text-white text-[9px] px-1.5 rounded-full"><%= my_drafts.count %></span>
-              </summary>
-              <div class="absolute bottom-full right-0 mb-3 w-72 bg-white border border-gray-200 shadow-2xl rounded-lg py-2 z-50 text-gray-800 draft-dropdown">
-                <div class="px-3 py-1 border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase">保存済みの下書き</div>
-                <div class="max-h-60 overflow-y-auto slack-scrollbar">
-                  <% if my_drafts.any? %>
-                    <% my_drafts.each do |draft| %>
-                      <div class="px-3 py-2 hover:bg-emerald-50 border-b border-gray-50 last:border-0 group/item flex justify-between items-center gap-2">
-                        <div class="flex-1 min-w-0">
-                          <div class="flex items-start justify-between mb-1">
-                            <span class="text-[10px] text-gray-400"><%= draft.updated_at.strftime("%m/%d %H:%M") %></span>
-                            <div class="flex items-center gap-2">
-                              <button type="button" onclick="setEditMode('<%= draft.actable_id %>', '<%= j draft.actable.content %>', '<%= draft.visibility_range %>')" class="text-[10px] text-[#00a968] font-bold hover:underline">再開</button>
-                              <%= link_to social_post_path(draft.actable), data: { turbo_method: :delete, turbo_confirm: "削除しますか？" }, class: "text-gray-300 hover:text-red-500" do %>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                              <% end %>
-                            </div>
-                          </div>
-                          <p class="text-[12px] text-gray-600 truncate"><%= draft.actable.content.truncate(25) %></p>
-                        </div>
-                      </div>
+        <% else %>
+          <% @activities.each do |activity| %>
+            <div class="flex items-start px-6 py-2 hover:bg-gray-50 transition-colors group relative border-b border-gray-50 last:border-0">
+              <div class="flex-shrink-0 mr-4 mt-1">
+                <%= profile_avatar_tag(activity.owner_profile, class: "h-10 w-10 rounded shadow-sm", size: 40) %>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-baseline gap-2 mb-0.5">
+                  <span class="font-black text-gray-900 text-[15px]"><%= activity.owner_profile.name %></span>
+                  <span class="text-[11px] text-gray-400"><%= activity.created_at.strftime("%H:%M") %></span>
+                </div>
+                <div class="text-gray-800 text-[15px] leading-relaxed break-words">
+                  <%# リポスト表示ロジック %>
+                  <% if activity.actable.is_a?(SocialRepost) %>
+                    <% if activity.actable.content.present? %>
+                      <div class="mb-2"><%= simple_format(activity.actable.content, {}, wrapper_tag: "span") %></div>
                     <% end %>
+                    <div class="border border-gray-200 rounded-lg p-3 bg-gray-50 mt-1 mb-1">
+                      <% if activity.actable.source_post.present? %>
+                        <span class="font-bold text-xs text-gray-700"><%= activity.actable.source_post.owner_profile.name %></span>
+                        <div class="text-sm text-gray-600"><%= simple_format(activity.actable.source_post.content, {}, wrapper_tag: "span") %></div>
+                      <% else %>
+                        <span class="text-xs italic text-gray-400">削除された投稿</span>
+                      <% end %>
+                    </div>
                   <% else %>
-                    <div class="px-3 py-4 text-center text-gray-400 text-xs">下書きはありません</div>
+                    <%= simple_format(activity.actable.content, {}, wrapper_tag: "span") %>
                   <% end %>
                 </div>
+
+                <div class="mt-2 flex items-center gap-3">
+                <%# Likeボタン %>
+                <% user_liked = activity.like_activities.exists?(owner_profile: my_current_profile) %>
+                <%= button_to activity_likes_path(activity), method: :post, 
+                    class: "flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all #{user_liked ? 'bg-pink-50 border-pink-200 text-pink-500' : 'bg-gray-50 border-gray-100 text-gray-400 hover:border-gray-300'}" do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 <%= 'fill-current' if user_liked %>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                    </svg>
+                    <% if activity.likes_count > 0 %>
+                    <span class="text-[11px] font-bold"><%= activity.likes_count %></span>
+                    <% end %>
+                <% end %>
+
+                <%# 返信（スレッド）ボタン %>
+                <button type="button" onclick="openSocialThread('<%= activity.id %>', '<%= activity.actable_id %>')" class="flex items-center gap-1 group/reply text-gray-400 hover:text-blue-500 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                    </svg>
+                    <span class="text-[11px] font-bold">
+                    <%= activity.comments_count > 0 ? "#{activity.comments_count} 件の返信を表示" : "返信" %>
+                    </span>
+                </button>
+                </div>
               </div>
-            </details>
+
+              <%# ホバーアクション（リポスト・編集） %>
+              <div class="absolute right-6 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                <button type="button" onclick="setRepostMode('<%= activity.actable.id %>', '<%= j (activity.actable.is_a?(SocialRepost) ? activity.actable.source_post.content : activity.actable.content).truncate(30) %>', '<%= activity.owner_profile.name %>')" class="p-1.5 bg-white border border-gray-200 rounded shadow-sm text-gray-500">♻️</button>
+                <% if activity.owner_profile == my_current_profile %>
+                  <button type="button" onclick="setEditMode('<%= activity.actable.id %>', '<%= j activity.actable.content %>', '<%= activity.visibility_range %>')" class="p-1.5 bg-white border border-gray-200 rounded shadow-sm text-gray-500">✏️</button>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <%# --- 復活：下書き対応・高機能フッター --- %>
+    <footer class="flex-shrink-0 px-6 py-4 border-t border-gray-100 bg-white">
+      <%= form_with(model: SocialPost.new, url: social_posts_path(filter: params[:filter]), id: "chat_form", class: "relative") do |f| %>
+        <input type="hidden" name="post_id" id="editing_message_id" value="">
+        <input type="hidden" name="source_post_id" id="repost_source_id" value="">
+        <input type="hidden" name="commit_type" id="commit_type" value="publish">
+        
+        <div id="edit_label" class="hidden text-[11px] font-bold text-[#00a968] mb-1">編集/下書き再開中 (Escで解除)</div>
+        <div id="reply_preview" class="hidden flex items-center justify-between mb-2 p-2 bg-blue-50 border border-blue-100 rounded text-[11px] text-blue-700">
+          <span class="font-bold truncate">💬 <span id="reply_user_name"></span> さんに返信中</span>
+          <button type="button" onclick="clearReplyMode()" class="text-blue-500 font-black">×</button>
+        </div>
+        <div id="repost_preview" class="hidden flex items-center justify-between mb-2 p-2 bg-emerald-50 border border-emerald-100 rounded text-[11px] text-emerald-700">
+          <span class="font-bold truncate">♻️ <span id="repost_user_name"></span> さんのポストをリポスト中</span>
+          <button type="button" onclick="clearRepostMode()" class="text-emerald-500 font-black">×</button>
+        </div>
+
+        <div class="border-2 border-gray-200 rounded-lg focus-within:border-[#00a968] bg-white chat-input-container">
+          <%= f.text_area :content, placeholder: "今の気持ちをシェアしましょう", rows: 1, class: "block w-full border-none focus:ring-0 py-3 px-4 text-[15px] resize-none", id: "message_textarea" %>
+          
+          <div class="flex items-center justify-between px-2 py-1.5 bg-gray-50 border-t border-gray-100">
+            <div class="flex items-center gap-4 text-[10px] text-gray-400 font-bold">
+              <label class="cursor-pointer"><%= radio_button_tag :visibility_range, :is_public, true %> 公開</label>
+              <label class="cursor-pointer"><%= radio_button_tag :visibility_range, :is_team, false, disabled: my_current_profile.team_id.blank? %> チーム</label>
+            </div>
             
-            <button type="button" onclick="submitAsDraft()" class="px-2 py-1 hover:bg-gray-200 rounded text-gray-500 font-bold transition-colors">下書き保存</button>
-            <%= f.button type: :submit, class: "p-1.5 text-[#00a968] hover:bg-[#00a968] hover:text-white rounded-md transition-all" do %>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9-2-9-18-9 18 9 2zm0 0v-8" /></svg>
-            <% end %>
+            <div class="flex items-center gap-2">
+              <%# 下書きトレイ %>
+                <% my_drafts = Activity.where(actable_type: 'SocialPost', owner_profile: my_current_profile).draft.order(updated_at: :desc) %>
+                <details class="relative group">
+                <summary class="list-none cursor-pointer px-2 py-1 hover:bg-gray-200 rounded text-[10px] text-gray-600 font-bold flex items-center gap-1">
+                    <span>下書きトレイ</span>
+                    <span class="bg-gray-300 text-white px-1.5 rounded-full"><%= my_drafts.count %></span>
+                </summary>
+                <div class="absolute bottom-full right-0 mb-2 w-72 bg-white border border-gray-200 shadow-xl rounded-lg py-2 draft-dropdown">
+                    <div class="px-3 py-1 border-b border-gray-50 text-[9px] font-bold text-gray-400 uppercase tracking-wider">保存済みの下書き</div>
+                    <div class="max-h-60 overflow-y-auto slack-scrollbar">
+                    <% if my_drafts.any? %>
+                        <% my_drafts.each do |draft| %>
+                        <div class="px-3 py-2 hover:bg-emerald-50 border-b border-gray-50 last:border-0 flex justify-between items-start gap-2 group/draft">
+                            <div class="flex-1 min-w-0">
+                            <p class="text-[12px] text-gray-600 truncate leading-tight"><%= draft.actable.content.presence || "(本文なし)" %></p>
+                            <p class="text-[9px] text-gray-400 mt-0.5"><%= draft.updated_at.strftime("%m/%d %H:%M") %></p>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                            <%# 再開ボタン %>
+                            <button type="button" 
+                                    onclick="setEditMode('<%= draft.actable_id %>', '<%= j draft.actable.content %>', '<%= draft.visibility_range %>')" 
+                                    class="text-[10px] text-[#00a968] font-bold hover:underline">再開</button>
+                            
+                            <%# 削除（アーカイブ）ボタン：Activityを消す、またはstatusを更新する設計に合わせる %>
+                            <%= link_to social_post_path(draft.actable), 
+                                        data: { turbo_method: :delete, turbo_confirm: "この下書きを削除しますか？" }, 
+                                        class: "text-gray-300 hover:text-red-500 transition-colors" do %>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            <% end %>
+                            </div>
+                        </div>
+                        <% end %>
+                    <% else %>
+                        <div class="px-3 py-4 text-center text-xs text-gray-400 font-medium">下書きはありません</div>
+                    <% end %>
+                    </div>
+                </div>
+                </details>
+
+              <button type="button" onclick="submitAsDraft()" class="text-[10px] text-gray-500 font-bold px-2 py-1 hover:bg-gray-200 rounded">下書き保存</button>
+              <%= f.button type: :submit, class: "p-1.5 text-[#00a968] hover:bg-emerald-50 rounded-md" do %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 19l9-2-9-18-9 18 9 2zm0 0v-8" /></svg>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </footer>
+  </div>
+
+  <div id="thread_panel" class="flex-shrink-0">
+    <header class="h-16 px-6 border-b border-gray-200 flex justify-between items-center bg-gray-50 shrink-0">
+      <h3 class="font-black text-gray-900">スレッド</h3>
+      <button onclick="closeSocialThread()" class="text-gray-400 hover:text-gray-600 font-black">×</button>
+    </header>
+    <div id="thread_content" class="flex-1 overflow-y-auto p-4 bg-white"></div>
+  </div>
+</div>
+
+<script>
+  function adjustTextareaHeight(el) { if(el){ el.style.height='auto'; el.style.height=el.scrollHeight+'px'; } }
+
+  // --- モード管理 ---
+  function clearEditMode() {
+    document.getElementById('editing_message_id').value = "";
+    document.getElementById('edit_label').classList.add('hidden');
+    document.getElementById('message_textarea').value = "";
+  }
+  function clearRepostMode() {
+    document.getElementById('chat_form').action = "<%= social_posts_path(filter: params[:filter]) %>";
+    document.getElementById('repost_source_id').value = "";
+    document.getElementById('repost_preview').classList.add('hidden');
+  }
+  function clearReplyMode() {
+    document.getElementById('chat_form').action = "<%= social_posts_path(filter: params[:filter]) %>";
+    document.getElementById('reply_preview').classList.add('hidden');
+  }
+
+  function setEditMode(id, content, visibility) {
+    clearRepostMode(); clearReplyMode();
+    const textarea = document.getElementById('message_textarea');
+    document.getElementById('editing_message_id').value = id;
+    textarea.value = content;
+    document.getElementById('edit_label').classList.remove('hidden');
+    const radio = document.querySelector(`input[name="visibility_range"][value="${visibility}"]`);
+    if(radio) radio.checked = true;
+    textarea.focus(); adjustTextareaHeight(textarea);
+  }
+
+  function setRepostMode(id, text, userName) {
+    clearEditMode(); clearReplyMode();
+    const form = document.getElementById('chat_form');
+    form.action = `/social_posts/${id}/repost`;
+    document.getElementById('repost_source_id').value = id;
+    document.getElementById('repost_user_name').innerText = userName;
+    document.getElementById('repost_preview').classList.remove('hidden');
+    document.getElementById('message_textarea').focus();
+  }
+
+  function setReplyMode(activityId, userName) {
+    clearEditMode(); clearRepostMode();
+    const form = document.getElementById('chat_form');
+    form.action = `/activities/${activityId}/comments`;
+    document.getElementById('reply_user_name').innerText = userName;
+    document.getElementById('reply_preview').classList.remove('hidden');
+    document.getElementById('message_textarea').focus();
+  }
+
+  function submitAsDraft() {
+    document.getElementById('commit_type').value = "draft";
+    document.getElementById('chat_form').requestSubmit();
+  }
+
+  // --- スレッド操作 ---
+  async function openSocialThread(activityId, postId) {
+    const panel = document.getElementById('thread_panel');
+    const content = document.getElementById('thread_content');
+    panel.classList.add('show');
+    content.innerHTML = '<div class="text-center py-10 text-xs text-gray-400">Loading...</div>';
+    try {
+      const response = await fetch(`/social_posts/${postId}/thread`);
+      content.innerHTML = await response.text();
+      setReplyMode(activityId, "スレッド");
+      const url = new URL(window.location);
+      url.searchParams.set('thread_id', activityId);
+      window.history.replaceState({}, '', url);
+    } catch (e) { content.innerHTML = 'Error'; }
+  }
+
+  function closeSocialThread() {
+    document.getElementById('thread_panel').classList.remove('show');
+    clearReplyMode();
+    const url = new URL(window.location);
+    url.searchParams.delete('thread_id');
+    window.history.replaceState({}, '', url);
+  }
+
+  // --- 初期化 (二重登録防止) ---
+  function initSocial() {
+    const form = document.getElementById('chat_form');
+    const textarea = document.getElementById('message_textarea');
+    if (!form || !textarea) return;
+
+    // スレッド自動再開
+    const container = document.getElementById('social_container');
+    const openThreadId = container?.dataset.openThreadId;
+    if (openThreadId) {
+      const btn = document.querySelector(`button[onclick*="openSocialThread('${openThreadId}'"]`);
+      if (btn) { btn.click(); container.dataset.openThreadId = ""; }
+    }
+
+    const newTextarea = textarea.cloneNode(true);
+    textarea.parentNode.replaceChild(newTextarea, textarea);
+
+    newTextarea.addEventListener('input', function() { adjustTextareaHeight(this); });
+    newTextarea.addEventListener('keydown', function(e) {
+      if (e.isComposing) return;
+      if (e.key === 'Enter' && e.shiftKey) {
+        e.preventDefault();
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if(submitBtn) submitBtn.disabled = true;
+        form.requestSubmit();
+      }
+      if (e.key === 'Escape') { clearEditMode(); clearRepostMode(); clearReplyMode(); closeSocialThread(); }
+    });
+  }
+
+  document.addEventListener("turbo:load", initSocial);
+  if (document.readyState !== "loading") initSocial();
+</script>-e \n--- END OF FILE ---\n
+app/views/social_posts/_thread.html.erb
+--- START OF FILE ---
+<!-- app/views/social_posts/_thread.html.erb -->
+
+<%# --- 親ポストの表示 --- %>
+<div class="border-b border-gray-100 pb-5 mb-5">
+  <div class="flex items-start gap-3">
+    <%= profile_avatar_tag(@parent_activity.owner_profile, class: "h-10 w-10 rounded shadow-sm", size: 40) %>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-baseline gap-2">
+        <span class="font-black text-gray-900 text-[15px]"><%= @parent_activity.owner_profile.name %></span>
+        <span class="text-[11px] text-gray-400 font-medium"><%= @parent_activity.created_at.strftime("%H:%M") %></span>
+      </div>
+      <div class="text-gray-800 text-[15px] leading-relaxed mt-1.5">
+        <%= simple_format(@parent_post.content) %>
+      </div>
+      
+      <%# 親ポストへの「いいね」状態などもここに出すとSNSらしくなります %>
+      <div class="mt-3">
+        <% user_liked = @parent_activity.like_activities.exists?(owner_profile: current_profile) %>
+        <span class="text-[11px] font-bold <%= user_liked ? 'text-pink-500' : 'text-gray-400' %>">
+          ❤️ <%= @parent_activity.like_activities.count %>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%# --- コメント（スレッド返信）一覧 --- %>
+<div class="space-y-5">
+  <div class="flex items-center gap-2 mb-4">
+    <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">返信 <%= @comments.count %> 件</span>
+    <div class="h-px flex-1 bg-gray-50"></div>
+  </div>
+
+  <% if @comments.any? %>
+    <% @comments.each do |c_act| %>
+      <div class="flex items-start gap-3 group">
+        <%= profile_avatar_tag(c_act.owner_profile, class: "h-8 w-8 rounded shadow-xs", size: 32) %>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-baseline gap-2">
+            <span class="font-bold text-gray-900 text-[13px]"><%= c_act.owner_profile.name %></span>
+            <span class="text-[10px] text-gray-400"><%= c_act.created_at.strftime("%H:%M") %></span>
+          </div>
+          <div class="text-gray-700 text-[14px] leading-relaxed mt-0.5">
+            <%= simple_format(c_act.actable.content) %>
           </div>
         </div>
       </div>
     <% end %>
-  </footer>
-</div>
-
-<script>
-  function adjustTextareaHeight(el) {
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = el.scrollHeight + 'px';
-  }
-
-  // --- 各モードのクリア関数 ---
-  function clearEditMode() {
-    const idInput = document.getElementById('editing_message_id');
-    const label = document.getElementById('edit_label');
-    const textarea = document.getElementById('message_textarea');
-    if (idInput) idInput.value = "";
-    if (label) label.classList.add('hidden');
-    if (textarea) {
-      textarea.value = "";
-      textarea.style.height = 'auto';
-    }
-  }
-
-  function clearRepostMode() {
-    const form = document.getElementById('chat_form');
-    const sourceInput = document.getElementById('repost_source_id');
-    const preview = document.getElementById('repost_preview');
-    if (!form || !sourceInput || !preview) return;
-    form.action = "<%= social_posts_path(filter: params[:filter]) %>";
-    sourceInput.value = "";
-    preview.classList.add('hidden');
-  }
-
-  function clearReplyMode() {
-    const form = document.getElementById('chat_form');
-    const preview = document.getElementById('reply_preview');
-    const textarea = document.getElementById('message_textarea');
-    const parentIdInput = document.getElementById('comment_parent_id');
-    if (!form) return;
-    form.action = "<%= social_posts_path(filter: params[:filter]) %>";
-    if (preview) preview.classList.add('hidden');
-    if (textarea) {
-      textarea.placeholder = "今の気持ちをシェアしましょう";
-      textarea.value = "";
-      textarea.style.height = 'auto';
-    }
-    if (parentIdInput) parentIdInput.value = "";
-  }
-
-  // --- 各モードの開始関数 ---
-  function setEditMode(id, content, visibility) {
-    clearRepostMode();
-    clearReplyMode();
-    const textarea = document.getElementById('message_textarea');
-    const idInput = document.getElementById('editing_message_id');
-    const label = document.getElementById('edit_label');
-    if (!textarea || !idInput) return;
-    idInput.value = id;
-    textarea.value = content;
-    if (label) label.classList.remove('hidden');
-    const radio = document.querySelector(`input[name="visibility_range"][value="${visibility}"]`);
-    if (radio) radio.checked = true;
-    textarea.focus();
-    adjustTextareaHeight(textarea);
-  }
-
-  function setRepostMode(id, text, userName) {
-    clearEditMode();
-    clearReplyMode();
-    const form = document.getElementById('chat_form');
-    const sourceInput = document.getElementById('repost_source_id');
-    const preview = document.getElementById('repost_preview');
-    const textarea = document.getElementById('message_textarea');
-    if (!form || !sourceInput || !preview) return;
-    form.action = `/social_posts/${id}/repost`;
-    sourceInput.value = id;
-    document.getElementById('repost_user_name').innerText = userName;
-    document.getElementById('repost_text_preview').innerText = text;
-    preview.classList.remove('hidden');
-    textarea.focus();
-  }
-
-  function setReplyMode(activityId, text, userName, parentCommentId = null) {
-    clearEditMode();
-    clearRepostMode();
-    const form = document.getElementById('chat_form');
-    const textarea = document.getElementById('message_textarea');
-    const preview = document.getElementById('reply_preview');
-    const parentIdInput = document.getElementById('comment_parent_id');
-    if (!form || !preview || !textarea) return;
-    form.action = `/activities/${activityId}/comments`;
-    parentIdInput.value = parentCommentId || "";
-    document.getElementById('reply_user_name').innerText = userName;
-    document.getElementById('reply_text_preview').innerText = text;
-    preview.classList.remove('hidden');
-    textarea.placeholder = "返信を入力...";
-    textarea.focus();
-    adjustTextareaHeight(textarea);
-  }
-
-  function submitAsDraft() {
-    const form = document.getElementById('chat_form');
-    const commitType = document.getElementById('commit_type');
-    const textarea = document.getElementById('message_textarea');
-    if (!textarea || textarea.value.trim() === "") return;
-    commitType.value = "draft";
-    form.requestSubmit();
-    setTimeout(() => {
-      clearEditMode();
-      clearRepostMode();
-      clearReplyMode();
-    }, 10);
-  }
-
-  // --- 初期化とイベントリスナー ---
-  (function() {
-    function initSocial() {
-      const messagesArea = document.getElementById('messages_area');
-      const textarea = document.getElementById('message_textarea');
-      const form = document.getElementById('chat_form');
-      if (!messagesArea || !textarea || !form) return;
-
-      messagesArea.scrollTop = messagesArea.scrollHeight;
-
-      textarea.oninput = function() {
-        adjustTextareaHeight(this);
-      };
-
-      textarea.onkeydown = function(e) {
-        if (e.isComposing || e.keyCode === 229) return;
-        
-        if (e.key === 'Escape') {
-          clearEditMode();
-          clearRepostMode();
-          clearReplyMode();
-        }
-
-        if (e.key === 'Enter' && e.shiftKey) {
-          e.preventDefault();
-          const isRepost = document.getElementById('repost_source_id').value !== "";
-          const isReply = !document.getElementById('reply_preview').classList.contains('hidden');
-          const hasContent = textarea.value.trim() !== "";
-
-          if (hasContent || isRepost || isReply) {
-            form.requestSubmit();
-            setTimeout(() => {
-              clearEditMode();
-              clearRepostMode();
-              clearReplyMode();
-            }, 10);
-          }
-        }
-      };
-    }
-    document.addEventListener("turbo:load", initSocial);
-    initSocial();
-  })();
-</script>-e \n--- END OF FILE ---\n
+  <% else %>
+    <div class="py-12 text-center text-gray-400">
+      <p class="text-xs">この投稿にまだ返信はありません</p>
+    </div>
+  <% end %>
+</div>-e \n--- END OF FILE ---\n
 app/views/social_posts/_sidebar.html.erb
 --- START OF FILE ---
 <!-- app/views/social_post/_sidebar.html.erb -->
-<div class="w-64 flex-shrink-0 bg-[#3F0E40] text-white flex flex-col h-full">
-  <div class="h-16 flex items-center px-4 border-b border-white/10">
-    <h1 class="font-black text-xl tracking-tight">Social</h1>
-  </div>
+<nav class="space-y-1">
+  <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Social</p>
   
-  <nav class="flex-1 overflow-y-auto py-4">
-    <div class="px-2 space-y-0.5">
-      <%= link_to social_posts_path, class: "flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-white/10 group #{params[:filter].blank? ? 'bg-white/10' : ''}" do %>
-        <span class="text-white/70 group-hover:text-white">🌏 全てのポスト</span>
-      <% end %>
-      
-      <%= link_to social_posts_path(filter: 'team'), class: "flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-white/10 group #{params[:filter] == 'team' ? 'bg-white/10' : ''}" do %>
-        <span class="text-white/70 group-hover:text-white">👥 チームのポスト</span>
-      <% end %>
+  <%# 全てのポスト %>
+  <%= link_to social_posts_path, 
+      class: "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors #{params[:filter].blank? ? 'bg-emerald-100 text-emerald-900' : 'text-gray-700 hover:bg-gray-100'}" do %>
+    <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+    </svg>
+    全てのポスト
+  <% end %>
 
-      <%= link_to social_posts_path(filter: 'mine'), class: "flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-white/10 group #{params[:filter] == 'mine' ? 'bg-white/10' : ''}" do %>
-        <span class="text-white/70 group-hover:text-white">📝 自分のポスト</span>
-      <% end %>
+  <%# チームのポスト %>
+  <%= link_to social_posts_path(filter: 'team'), 
+      class: "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors #{params[:filter] == 'team' ? 'bg-emerald-100 text-emerald-900' : 'text-gray-700 hover:bg-gray-100'}" do %>
+    <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+    </svg>
+    チームのポスト
+  <% end %>
 
-      <%= link_to social_posts_path(filter: 'draft'), class: "flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-white/10 group #{params[:filter] == 'draft' ? 'bg-white/10' : ''}" do %>
-        <span class="text-white/70 group-hover:text-white">📁 下書き</span>
-      <% end %>
-    </div>
-  </nav>
-</div>-e \n--- END OF FILE ---\n
+  <%# 自分のポスト %>
+  <%= link_to social_posts_path(filter: 'mine'), 
+      class: "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors #{params[:filter] == 'mine' ? 'bg-emerald-100 text-emerald-900' : 'text-gray-700 hover:bg-gray-100'}" do %>
+    <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+    </svg>
+    自分のポスト
+  <% end %>
+
+  <%# 下書き %>
+  <%= link_to social_posts_path(filter: 'draft'), 
+      class: "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors #{params[:filter] == 'draft' ? 'bg-emerald-100 text-emerald-900' : 'text-gray-700 hover:bg-gray-100'}" do %>
+    <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9l-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
+    下書き
+  <% end %>
+</nav>-e \n--- END OF FILE ---\n
 app/views/social_posts/_form.html.erb
 --- START OF FILE ---
 -e \n--- END OF FILE ---\n
@@ -3222,36 +3377,53 @@ app/views/works/index.html.erb
 app/views/works/_sidebar.html.erb
 --- START OF FILE ---
 <%# app/views/works/_sidebar.html.erb %>
-<nav class="space-y-1 px-4 py-6">
-  <p class="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Works Navigation</p>
+<nav class="space-y-1">
+  <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Works</p>
   
   <%# 全てのWorks %>
-  <%= link_to works_path, class: "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg #{params[:filter].blank? && params[:type].blank? ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-50'}" do %>
-    <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> 全てのWorks
+  <%= link_to works_path, 
+      class: "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors #{params[:filter].blank? && params[:type].blank? ? 'bg-emerald-100 text-emerald-900' : 'text-gray-700 hover:bg-gray-100'}" do %>
+    <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+    </svg>
+    全てのWorks
   <% end %>
 
   <%# 自分のWorks %>
-  <%= link_to works_path(filter: 'mine'), class: "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg #{params[:filter] == 'mine' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-50'}" do %>
-    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 自分のWorks
+  <%= link_to works_path(filter: 'mine'), 
+      class: "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors #{params[:filter] == 'mine' ? 'bg-emerald-100 text-emerald-900' : 'text-gray-700 hover:bg-gray-100'}" do %>
+    <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    </svg>
+    自分のWorks
   <% end %>
 
   <%# 共有されたWorks %>
-  <%= link_to works_path(filter: 'shared'), class: "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg #{params[:filter] == 'shared' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-50'}" do %>
-    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> 共有されたWorks
+  <%= link_to works_path(filter: 'shared'), 
+      class: "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors #{params[:filter] == 'shared' ? 'bg-emerald-100 text-emerald-900' : 'text-gray-700 hover:bg-gray-100'}" do %>
+    <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+    </svg>
+    共有されたWorks
   <% end %>
 
-  <div class="pt-6">
-    <p class="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Formats</p>
+  <div class="pt-4">
+    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Formats</p>
     
-    <%# Note フィルタ (MVP) %>
-    <%= link_to works_path(type: 'note'), class: "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg #{params[:type] == 'note' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-50'}" do %>
-      <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+    <%# Note フィルタ %>
+    <%= link_to works_path(type: 'note'), 
+        class: "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors #{params[:type] == 'note' ? 'bg-emerald-100 text-emerald-900' : 'text-gray-700 hover:bg-gray-100'}" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
       Note
     <% end %>
 
-    <%# 将来の拡張用（グレーアウト） %>
-    <div class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-300 cursor-not-allowed">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+    <%# 将来の拡張用（Teamの非アクティブに近いスタイルへ） %>
+    <div class="flex items-center px-3 py-2 text-sm font-medium text-gray-300 cursor-not-allowed">
+      <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
       Table (Soon)
     </div>
   </div>
@@ -3566,7 +3738,7 @@ app/views/teams/_sidebar.html.erb
 --- START OF FILE ---
 <!-- app/views/teams/_sidebar.html.erb -->
 <nav class="space-y-1">
-  <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Team Module</p>
+  <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Team</p>
   
   <%# メンバー一覧 (ホーム) %>
   <%= link_to members_team_path, 
@@ -3982,9 +4154,29 @@ app/views/teams/new.html.erb
 app/views/profiles/_sidebar.html.erb
 --- START OF FILE ---
 <!-- app/views/profiles/_sidebar.html.erb -->
-<p class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Profile</p>
-<%= link_to "プロフィール編集", edit_profile_path(current_user.profiles.first), class: "bg-emerald-50 text-[#00a968] group flex items-center px-3 py-2 text-sm font-medium rounded-md" %>
-<%= link_to "新規プロフィール作成", new_profile_path, class: "text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-3 py-2 text-sm font-medium rounded-md" %>-e \n--- END OF FILE ---\n
+<nav class="space-y-1">
+  <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Profile</p>
+  
+  <%# プロフィール編集 %>
+  <%# ※ @profile が存在することを想定していますが、安全のために current_user.profiles.first を維持しています %>
+  <% target_profile = @profile || current_user.profiles.first %>
+  <%= link_to edit_profile_path(target_profile), 
+      class: "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors #{controller_name == 'profiles' && action_name == 'edit' ? 'bg-emerald-100 text-emerald-900' : 'text-gray-700 hover:bg-gray-100'}" do %>
+    <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    </svg>
+    プロフィール編集
+  <% end %>
+
+  <%# 新規プロフィール作成 %>
+  <%= link_to new_profile_path, 
+      class: "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors #{controller_name == 'profiles' && action_name == 'new' ? 'bg-emerald-100 text-emerald-900' : 'text-gray-700 hover:bg-gray-100'}" do %>
+    <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    新規プロフィール作成
+  <% end %>
+</nav>-e \n--- END OF FILE ---\n
 app/views/profiles/edit.html.erb
 --- START OF FILE ---
 <!-- app/views/profiles/edit.html.erb -->
@@ -4215,6 +4407,7 @@ app/views/chat_rooms/_sidebar.html.erb
 --- START OF FILE ---
 <!-- app/views/chat_rooms/_sidebar.html.erb -->
 <div class="space-y-4">
+  <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Chat</p>
   <%# 新規ルーム作成ボタン %>
   <div class="px-2">
     <%= link_to new_chat_room_path, class: "flex items-center justify-center w-full py-2 px-4 bg-[#00a968] text-white text-xs font-bold rounded-xl hover:bg-[#008f58] transition-all shadow-sm" do %>
@@ -4227,7 +4420,6 @@ app/views/chat_rooms/_sidebar.html.erb
 
   <%# ルーム一覧 %>
   <div class="mt-4">
-    <p class="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">参加中のチャット</p>
     <div class="space-y-1">
       <%# current_profile が参加しているルームを取得 %>
       <%# ※ ChatMembership モデルを介して取得する想定 %>
@@ -4432,7 +4624,6 @@ app/views/chat_rooms/show.html.erb
 <% my_current_profile = current_profile %>
 
 <style>
-  /* メインレイアウトの固定 */
   main { overflow: hidden !important; height: 100% !important; }
   main > div { padding: 0 !important; max-width: none !important; height: 100% !important; }
   
@@ -4440,42 +4631,17 @@ app/views/chat_rooms/show.html.erb
   .slack-scrollbar::-webkit-scrollbar-track { background: transparent; }
   .slack-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
   
-  /* 分割レイアウト用のコンテナ */
-  .chat-layout-container {
-    display: flex;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  }
-  
-  .main-chat-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: 0; /* 折り返しを正常にするため */
-    transition: all 0.3s ease;
-  }
-
-  /* スレッドが開いている時のメインエリアの調整（必要に応じて） */
-  .thread-open .main-chat-area {
-    /* 必要ならここに幅の制限などを追加 */
-  }
+  .chat-layout-container { display: flex; width: 100%; height: 100%; overflow: hidden; }
+  .main-chat-area { flex: 1; display: flex; flex-direction: column; min-width: 0; transition: all 0.2s ease-in-out; }
 
   #thread_panel {
-    width: 400px;
-    border-l: 1px solid #e5e7eb;
-    background: white;
-    display: none; /* 初期は非表示 */
-    flex-direction: column;
+    width: 0; background: white; display: none; flex-direction: column; border-left: 1px solid #e5e7eb; transition: width 0.2s ease-in-out;
   }
-
-  #thread_panel.show {
-    display: flex;
-  }
+  #thread_panel.show { width: 400px; display: flex; }
+  .draft-dropdown { z-index: 100; }
 </style>
 
 <div class="chat-layout-container" id="chat_container" data-open-thread-id="<%= params[:thread_id] %>">
-  <%# --- メインチャットエリア --- %>
   <div class="main-chat-area">
     <header class="flex-shrink-0 h-16 px-6 border-b border-gray-200 flex justify-between items-center bg-white z-10">
       <div class="flex items-center gap-3">
@@ -4483,7 +4649,7 @@ app/views/chat_rooms/show.html.erb
         <h2 class="font-black text-gray-900 text-lg truncate"><%= @chat_room.display_name %></h2>
       </div>
       <div class="flex items-center gap-2">
-        <span class="text-xs text-gray-400 mr-2"><%= @chat_room.profiles.count %> 人のメンバー</span>
+        <span class="text-xs text-gray-400 mr-2 font-medium"><%= @chat_room.profiles.count %> 人のメンバー</span>
         <%= link_to edit_chat_room_path(@chat_room), class: "p-2 hover:bg-gray-100 rounded-full text-gray-500" do %>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
         <% end %>
@@ -4508,33 +4674,29 @@ app/views/chat_rooms/show.html.erb
                   <%= simple_format(message.content, {}, wrapper_tag: "span") %>
                 </div>
 
-                <%# --- アクションボタン（Like & 返信） --- %>
                 <div class="flex items-center gap-3 mt-2">
-                  <%# Likeボタン %>
                   <% user_liked = activity.like_activities.exists?(owner_profile: my_current_profile) %>
                   <%= button_to activity_likes_path(activity), method: :post, 
                       class: "flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all #{user_liked ? 'bg-pink-50 border-pink-200 text-pink-500' : 'bg-gray-50 border-gray-100 text-gray-400 hover:border-gray-300'}" do %>
-                      
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 <%= 'fill-current' if user_liked %>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                      </svg>
-                      
-                      <% likes_count = activity.like_activities.count %>
-                      <% if likes_count > 0 %>
-                        <span class="text-[11px] font-bold"><%= likes_count %></span>
-                      <% end %>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 <%= 'fill-current' if user_liked %>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
+                      <% if (count = activity.like_activities.count) > 0 %><span class="text-[11px] font-bold"><%= count %></span><% end %>
                   <% end %>
 
-                  <%# スレッドボタン %>
                   <button onclick="openThread('<%= activity.id %>', '<%= message.id %>')" class="flex items-center gap-1 group/reply text-gray-400 hover:text-blue-500 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
-                    <span class="text-[11px] font-bold">
-                      <% count = activity.comment_activities.count %>
-                      <%= count > 0 ? "#{count} 件の返信を表示" : "返信" %>
-                    </span>
+                    <span class="text-[11px] font-bold"><%= (c = activity.comment_activities.count) > 0 ? "#{c} 件の返信を表示" : "返信" %></span>
                   </button>
                 </div>
               </div>
+              
+              <%# 編集用ホバーアクション（Socialと同じ仕様で追加） %>
+              <% if activity.owner_profile == my_current_profile %>
+                <div class="absolute right-6 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button type="button" onclick="setEditMode('<%= message.id %>', '<%= j message.content %>')" class="p-1.5 bg-white border border-gray-200 rounded shadow-sm text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                  </button>
+                </div>
+              <% end %>
             </div>
           <% end %>
         <% end %>
@@ -4547,135 +4709,180 @@ app/views/chat_rooms/show.html.erb
         <input type="hidden" name="commit_type" id="commit_type" value="publish">
         <input type="hidden" name="parent_activity_id" id="parent_activity_id" value="">
         
+        <div id="edit_label" class="hidden text-[11px] font-bold text-[#00a968] mb-1 px-1 text-xs">編集/下書き再開中 (Escで解除)</div>
         <div id="reply_preview" class="hidden flex items-center justify-between mb-2 p-2 bg-blue-50 border border-blue-100 rounded text-[11px] text-blue-700">
           <span class="truncate">💬 <span id="reply_user_name"></span> へのスレッドに返信中</span>
-          <button type="button" onclick="clearReplyMode()" class="text-blue-500 font-bold">×</button>
+          <button type="button" onclick="clearReplyMode()" class="text-blue-500 font-bold hover:text-blue-700">×</button>
         </div>
 
-        <div class="border-2 border-gray-200 rounded-lg focus-within:border-[#00a968] transition-all bg-white">
+        <div class="border-2 border-gray-200 rounded-lg focus-within:border-[#00a968] transition-all bg-white shadow-sm">
           <%= f.text_area :content, placeholder: "メッセージを入力...", rows: 1, id: "message_textarea", class: "block w-full border-none focus:ring-0 py-3 px-4 text-[15px] resize-none min-h-[44px]" %>
           <div class="flex items-center justify-between px-2 py-1.5 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400">
-            <span class="px-2"><strong>Enter</strong> で改行 / <strong>Shift + Enter</strong> で送信</span>
-            <button type="submit" class="p-1.5 text-[#00a968] hover:bg-emerald-50 rounded-md">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9-2-9-18-9 18 9 2zm0 0v-8" /></svg>
-            </button>
+            <span class="px-2"><strong>Shift + Enter</strong> で送信 / <strong>Esc</strong> で解除</span>
+            
+            <div class="flex items-center gap-2">
+              <%# 下書きトレイ（Socialから移植） %>
+              <% my_drafts = Activity.where(actable_type: 'RoomMessage', owner_profile: my_current_profile).draft.order(updated_at: :desc) %>
+              <details class="relative group">
+                <summary class="list-none cursor-pointer px-2 py-1 hover:bg-gray-200 rounded text-[10px] text-gray-600 font-bold flex items-center gap-1">
+                  <span>下書き</span>
+                  <span class="bg-gray-300 text-white px-1.5 rounded-full"><%= my_drafts.count %></span>
+                </summary>
+                <div class="absolute bottom-full right-0 mb-2 w-72 bg-white border border-gray-200 shadow-xl rounded-lg py-2 draft-dropdown">
+                  <div class="px-3 py-1 border-b border-gray-50 text-[9px] font-bold text-gray-400 uppercase tracking-wider">保存済みの下書き</div>
+                  <div class="max-h-60 overflow-y-auto slack-scrollbar">
+                    <% if my_drafts.any? %>
+                      <% my_drafts.each do |draft| %>
+                        <div class="px-3 py-2 hover:bg-emerald-50 border-b border-gray-50 last:border-0 flex justify-between items-start gap-2">
+                          <div class="flex-1 min-w-0 text-left">
+                            <p class="text-[12px] text-gray-600 truncate leading-tight font-medium"><%= draft.actable.content.presence || "(本文なし)" %></p>
+                            <p class="text-[9px] text-gray-400 mt-0.5"><%= draft.updated_at.strftime("%m/%d %H:%M") %></p>
+                          </div>
+                          <div class="flex items-center gap-2 shrink-0">
+                            <button type="button" onclick="setEditMode('<%= draft.actable_id %>', '<%= j draft.actable.content %>')" class="text-[10px] text-[#00a968] font-bold hover:underline">再開</button>
+                            <%= link_to chat_room_room_message_path(@chat_room, draft.actable), data: { turbo_method: :delete, turbo_confirm: "下書きを削除しますか？" }, class: "text-gray-300 hover:text-red-500 transition-colors" do %>
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            <% end %>
+                          </div>
+                        </div>
+                      <% end %>
+                    <% else %>
+                      <div class="px-3 py-4 text-center text-xs text-gray-400 font-medium">下書きなし</div>
+                    <% end %>
+                  </div>
+                </div>
+              </details>
+
+              <button type="button" onclick="submitAsDraft()" class="text-[10px] text-gray-500 font-bold px-2 py-1 hover:bg-gray-200 rounded transition-colors">下書き保存</button>
+              <button type="submit" class="p-1.5 text-[#00a968] hover:bg-emerald-50 rounded-md transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9-2-9-18-9 18 9 2zm0 0v-8" /></svg>
+              </button>
+            </div>
           </div>
         </div>
       <% end %>
     </footer>
   </div>
 
-  <%# --- 右サイドパネル（スレッド） --- %>
   <div id="thread_panel" class="flex-shrink-0">
-    <header class="h-16 px-6 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+    <header class="h-16 px-6 border-b border-gray-200 flex justify-between items-center bg-gray-50 shrink-0">
       <h3 class="font-black text-gray-900">スレッド</h3>
-      <button onclick="closeThread()" class="p-2 hover:bg-gray-200 rounded-full text-gray-500">
+      <button onclick="closeThread()" class="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
       </button>
     </header>
-    <div id="thread_content" class="flex-1 overflow-y-auto p-6 slack-scrollbar"></div>
+    <div id="thread_content" class="flex-1 overflow-y-auto p-6 slack-scrollbar bg-white"></div>
   </div>
 </div>
 
 <script>
+  function adjustChatTextareaHeight(el) { if (!el) return; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+
+  function clearEditMode() {
+    document.getElementById('editing_message_id').value = "";
+    document.getElementById('edit_label').classList.add('hidden');
+    const textarea = document.getElementById('message_textarea');
+    textarea.value = "";
+    adjustChatTextareaHeight(textarea);
+  }
+
+  function setEditMode(id, content) {
+    clearReplyMode();
+    const textarea = document.getElementById('message_textarea');
+    document.getElementById('editing_message_id').value = id;
+    textarea.value = content;
+    document.getElementById('edit_label').classList.remove('hidden');
+    textarea.focus();
+    adjustChatTextareaHeight(textarea);
+  }
+
+  function submitAsDraft() {
+    document.getElementById('commit_type').value = "draft";
+    document.getElementById('chat_form').requestSubmit();
+  }
+
   function initChat() {
     const textarea = document.getElementById('message_textarea');
     const form = document.getElementById('chat_form');
     const messagesArea = document.getElementById('messages_area');
+    const container = document.getElementById('chat_container');
 
     if (!textarea || !form) return;
 
-    // 初期スクロール
+    const newTextarea = textarea.cloneNode(true);
+    textarea.parentNode.replaceChild(newTextarea, textarea);
+    const finalForm = document.getElementById('chat_form');
+
     if (messagesArea) messagesArea.scrollTop = messagesArea.scrollHeight;
 
-    // ★ 追記：リロード時にスレッドを再開する
-    const container = document.getElementById('chat_container');
     const openThreadId = container.dataset.openThreadId;
-    
-    if (openThreadId) {
-        // activityId から messageId を特定するのは少し手間なので、
-        // openThread 関数を「activityId だけで動く」ように調整するか、
-        // 以下のように直接呼び出します（既存のボタンを探してクリックするのが一番確実）
-        const threadButton = document.querySelector(`button[onclick*="openThread('${openThreadId}'"]`);
-        if (threadButton) {
-        threadButton.click();
-        }
+    if (openThreadId && openThreadId !== "") {
+      const threadButton = document.querySelector(`button[onclick*="openThread('${openThreadId}'"]`);
+      if (threadButton) { threadButton.click(); container.dataset.openThreadId = ""; }
     }
 
-    // テキストエリアの自動リサイズ
-    textarea.addEventListener('input', function() {
-      this.style.height = 'auto';
-      this.style.height = (this.scrollHeight) + 'px';
-    });
-
-    // ★ Shift + Enter で送信 / Enter で改行 の復活
-    textarea.addEventListener('keydown', function(e) {
-      if (e.isComposing || e.keyCode === 229) return;
-
-      if (e.key === 'Enter') {
-        if (e.shiftKey) {
-          // Shift + Enter = 送信
-          e.preventDefault();
-          if (this.value.trim() !== "") {
-            form.requestSubmit();
-            this.value = "";
-            this.style.height = 'auto';
-          }
+    newTextarea.addEventListener('input', function() { adjustChatTextareaHeight(this); });
+    newTextarea.addEventListener('keydown', function(e) {
+      if (e.isComposing) return;
+      if (e.key === 'Enter' && e.shiftKey) {
+        e.preventDefault();
+        if (this.value.trim() !== "") {
+          const submitBtn = finalForm.querySelector('button[type="submit"]');
+          if (submitBtn) submitBtn.disabled = true;
+          document.getElementById('commit_type').value = "publish";
+          finalForm.requestSubmit();
         }
-        // 普通の Enter はブラウザのデフォルト挙動（改行）に任せる
       }
-      
-      if (e.key === 'Escape') {
-        clearEditMode();
-        closeThread();
-      }
+      if (e.key === 'Escape') { clearEditMode(); clearReplyMode(); closeThread(); }
     });
   }
 
-  // スレッドを開く（完全に右に配置）
   async function openThread(activityId, messageId) {
     const panel = document.getElementById('thread_panel');
     const content = document.getElementById('thread_content');
     const container = document.getElementById('chat_container');
-    
     panel.classList.add('show');
-    container.classList.add('thread-open');
     content.innerHTML = '<div class="flex justify-center py-10"><div class="animate-spin h-5 w-5 border-2 border-emerald-500 border-t-transparent rounded-full"></div></div>';
-    
     try {
       const response = await fetch(`/chat_rooms/<%= @chat_room.id %>/room_messages/${messageId}/thread`);
       content.innerHTML = await response.text();
       setReplyMode(activityId, "スレッド");
-    } catch (e) {
-      content.innerHTML = '読み込みエラー';
-    }
+      const url = new URL(window.location);
+      url.searchParams.set('thread_id', activityId);
+      window.history.replaceState({}, '', url);
+    } catch (e) { content.innerHTML = '<div class="p-6 text-red-500 text-sm font-bold">Error</div>'; }
   }
 
   function closeThread() {
-    document.getElementById('thread_panel').classList.remove('show');
-    document.getElementById('chat_container').classList.remove('thread-open');
+    const panel = document.getElementById('thread_panel');
+    if (panel) panel.classList.remove('show');
     clearReplyMode();
-    
-    // URLから thread_id パラメータを削除（履歴に残さない）
     const url = new URL(window.location);
     url.searchParams.delete('thread_id');
     window.history.replaceState({}, '', url);
-    }
+  }
 
   function setReplyMode(activityId, userName) {
-    document.getElementById('parent_activity_id').value = activityId;
-    document.getElementById('reply_user_name').innerText = userName;
-    document.getElementById('reply_preview').classList.remove('hidden');
-    document.getElementById('message_textarea').focus();
+    clearEditMode();
+    const parentInput = document.getElementById('parent_activity_id');
+    const label = document.getElementById('reply_user_name');
+    const preview = document.getElementById('reply_preview');
+    const textarea = document.getElementById('message_textarea');
+    if (parentInput) parentInput.value = activityId;
+    if (label) label.innerText = userName;
+    if (preview) preview.classList.remove('hidden');
+    if (textarea) textarea.focus();
   }
 
   function clearReplyMode() {
-    document.getElementById('parent_activity_id').value = "";
-    document.getElementById('reply_preview').classList.add('hidden');
+    const parentInput = document.getElementById('parent_activity_id');
+    const preview = document.getElementById('reply_preview');
+    if (parentInput) parentInput.value = "";
+    if (preview) preview.classList.add('hidden');
   }
 
   document.addEventListener("turbo:load", initChat);
-  initChat();
+  if (document.readyState !== "loading") initChat();
 </script>-e \n--- END OF FILE ---\n
 app/views/chat_rooms/new.html.erb
 --- START OF FILE ---
@@ -4750,18 +4957,22 @@ app/helpers/application_helper.rb
 --- START OF FILE ---
 # app/helpers/application_helper.rb
 module ApplicationHelper
-  def profile_avatar_tag(profile, options = {})
+  def profile_avatar_tag(object, options = {}) # 引数名を profile から object に変えると分かりやすいです
     # デフォルトのサイズを設定
     size = options.delete(:size) || 100
     # ビューから渡された class とデフォルトの角丸スタイルを結合
     img_class = "rounded-xl object-cover #{options[:class]}"
-    
-    if profile.avatar.attached?
-      image_tag profile.avatar.variant(resize_to_fill: [size, size]), 
+
+    # object が avatar を持っていて、かつアタッチされているか確認
+    if object.respond_to?(:avatar) && object.avatar.attached?
+      image_tag object.avatar.variant(resize_to_fill: [size, size]),
                 options.merge(class: img_class, style: "width: #{size}px; height: #{size}px; #{options[:style]}")
     else
-      initial = profile.name.to_s[0]&.upcase || "?"
-      content_tag :div, initial, 
+      # name があればそれを使い、なければ display_name を使う。どちらもなければ "?"
+      name_source = object.try(:name) || object.try(:display_name)
+      initial = name_source.to_s[0]&.upcase || "?"
+      
+      content_tag :div, initial,
                   options.merge(
                     class: "#{img_class} bg-gray-400 flex items-center justify-center text-white font-bold",
                     style: "width: #{size}px; height: #{size}px; font-size: #{size / 2}px; #{options[:style]}"
@@ -4772,13 +4983,13 @@ module ApplicationHelper
   def team_avatar_tag(team, options = {})
     size = options.delete(:size) || 48 # デフォルト48px
     img_class = "rounded-xl object-cover #{options[:class]}"
-    
+
     if team&.avatar&.attached?
-      image_tag team.avatar.variant(resize_to_fill: [size * 2, size * 2]), 
+      image_tag team.avatar.variant(resize_to_fill: [ size * 2, size * 2 ]),
                 options.merge(class: img_class, style: "width: #{size}px; height: #{size}px; #{options[:style]}")
     else
       initial = team&.display_name&.first&.upcase || "T"
-      content_tag :div, initial, 
+      content_tag :div, initial,
                   options.merge(
                     class: "#{img_class} bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold",
                     style: "width: #{size}px; height: #{size}px; font-size: #{size / 2}px; #{options[:style]}"
@@ -4788,17 +4999,18 @@ module ApplicationHelper
 
   def status_color_class(status)
     case status.to_s
-    when 'todo', '0'
-      'bg-amber-50 text-amber-600 border-amber-200'
-    when 'in_progress', '1'
-      'bg-blue-50 text-blue-600 border-blue-200'
-    when 'done', '2'
-      'bg-emerald-50 text-emerald-600 border-emerald-200'
+    when "todo", "0"
+      "bg-amber-50 text-amber-600 border-amber-200"
+    when "in_progress", "1"
+      "bg-blue-50 text-blue-600 border-blue-200"
+    when "done", "2"
+      "bg-emerald-50 text-emerald-600 border-emerald-200"
     else
-      'bg-gray-50 text-gray-600 border-gray-200'
+      "bg-gray-50 text-gray-600 border-gray-200"
     end
   end
-end-e \n--- END OF FILE ---\n
+end
+-e \n--- END OF FILE ---\n
 app/channels/application_cable/connection.rb
 --- START OF FILE ---
 module ApplicationCable
@@ -4963,29 +5175,30 @@ config/routes.rb
 Rails.application.routes.draw do
   # controllers オプションを追加
   devise_for :users, controllers: {
-    registrations: 'users/registrations'
+    registrations: "users/registrations",
+    sessions: "users/sessions"
   }
-  
+
   authenticated :user do
     root "tasks#index", as: :authenticated_root
-    resources :tasks, only: [:index, :create, :update, :edit]
-    resources :schedules, only: [:edit, :update, :create]
-    resources :works, only: [:index, :new, :create, :edit, :update, :destroy, :show]
+    resources :tasks, only: [ :index, :create, :update, :edit ]
+    resources :schedules, only: [ :edit, :update, :create ]
+    resources :works, only: [ :index, :new, :create, :edit, :update, :destroy, :show ]
   end
 
   root to: redirect("/users/sign_in")
 
   # Activities用のルーティング
-  resources :activities, only: [:destroy] do
-    resources :comments, only: [:create, :destroy]
-    resources :likes, only: [:create, :destroy]
+  resources :activities, only: [ :destroy ] do
+    resources :comments, only: [ :create, :destroy ]
+    resources :likes, only: [ :create, :destroy ]
   end
 
   # Chat_room用のルーティング
   resources :chat_rooms do
-    resources :room_memberships, only: [:create, :destroy]
+    resources :room_memberships, only: [ :create, :destroy ]
     # room_messagesに member ブロックを追加
-    resources :room_messages, only: [:create, :update, :destroy] do
+    resources :room_messages, only: [ :create, :update, :destroy ] do
       member do
         get :thread
       end
@@ -4993,9 +5206,10 @@ Rails.application.routes.draw do
   end
 
   # SocialPost用のルーティング
-  resources :social_posts, only: [:index, :create, :update, :destroy] do
+  resources :social_posts, only: [ :index, :create, :update, :destroy ] do
     member do
       post :repost
+      get :thread
     end
   end
 
@@ -5007,9 +5221,9 @@ Rails.application.routes.draw do
   end
 
   # Team用のルーティング
-  resource :team, only: [:new, :create, :edit, :update] do
+  resource :team, only: [ :new, :create, :edit, :update ] do
     get :members
-    resources :invitations, only: [:create], controller: 'team_invitations' do
+    resources :invitations, only: [ :create ], controller: "team_invitations" do
       collection do
         get :search
       end
@@ -5022,5 +5236,11 @@ Rails.application.routes.draw do
   end
 
   # Schedule用のルーティング
-  resources :schedule_invitations, only: [:update]
-end-e \n--- END OF FILE ---\n
+  resources :schedule_invitations, only: [ :update ]
+
+  # ゲストログイン用のルーティング
+  devise_scope :user do
+    post "guest_sign_in", to: "users/sessions#guest_sign_in"
+  end
+end
+-e \n--- END OF FILE ---\n

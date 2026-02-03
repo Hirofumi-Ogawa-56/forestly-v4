@@ -1,16 +1,20 @@
 # app/helpers/application_helper.rb
 module ApplicationHelper
-  def profile_avatar_tag(profile, options = {})
+  def profile_avatar_tag(object, options = {}) # 引数名を profile から object に変えると分かりやすいです
     # デフォルトのサイズを設定
     size = options.delete(:size) || 100
     # ビューから渡された class とデフォルトの角丸スタイルを結合
     img_class = "rounded-xl object-cover #{options[:class]}"
 
-    if profile.avatar.attached?
-      image_tag profile.avatar.variant(resize_to_fill: [ size, size ]),
+    # object が avatar を持っていて、かつアタッチされているか確認
+    if object.respond_to?(:avatar) && object.avatar.attached?
+      image_tag object.avatar.variant(resize_to_fill: [ size, size ]),
                 options.merge(class: img_class, style: "width: #{size}px; height: #{size}px; #{options[:style]}")
     else
-      initial = profile.name.to_s[0]&.upcase || "?"
+      # name があればそれを使い、なければ display_name を使う。どちらもなければ "?"
+      name_source = object.try(:name) || object.try(:display_name)
+      initial = name_source.to_s[0]&.upcase || "?"
+
       content_tag :div, initial,
                   options.merge(
                     class: "#{img_class} bg-gray-400 flex items-center justify-center text-white font-bold",
