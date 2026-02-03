@@ -5,6 +5,8 @@ class Profile < ApplicationRecord
   has_many :team_membership_requests, dependent: :destroy
   has_many :room_memberships, class_name: "RoomMembership", dependent: :destroy
   has_many :chat_rooms, through: :room_memberships, source: :chat_room
+  has_many :activities, foreign_key: :owner_profile_id, dependent: :destroy
+  has_many :task_assignees, dependent: :destroy
   has_one_attached :avatar
 
   # 概要に基づいたステータスとロール

@@ -243,6 +243,8 @@ class Profile < ApplicationRecord
   has_many :team_membership_requests, dependent: :destroy
   has_many :room_memberships, class_name: "RoomMembership", dependent: :destroy
   has_many :chat_rooms, through: :room_memberships, source: :chat_room
+  has_many :activities, foreign_key: :owner_profile_id, dependent: :destroy
+  has_many :task_assignees, dependent: :destroy
   has_one_attached :avatar
 
   # 概要に基づいたステータスとロール
@@ -1147,43 +1149,101 @@ app/controllers/users/sessions_controller.rb
 # app/controllers/users/sessions_controller.rb
 class Users::SessionsController < Devise::SessionsController
   def guest_sign_in
-    user = User.find_or_create_by!(email: 'guest@example.com') do |u|
+    if old_user = User.find_by(email: "guest@example.com")
+      old_user.profiles.destroy_all 
+      old_user.destroy
+    end
+
+    user = User.find_or_create_by!(email: "guest@example.com") do |u|
       u.password = SecureRandom.urlsafe_base64
     end
 
-    unless user.profiles.exists?
+    # unless user.profiles.exists?
       # 1. 仕事用 (Work)
-      # profile_id は index が unique なので、ゲストごとに被らない工夫が必要
-      user.profiles.create!(
+      p1 = user.profiles.create!(
         label: "Work (本業)",
         name: "Sato | Director",
         profile_id: "sato_work_#{SecureRandom.hex(3)}",
-        status: 0
+        status: 0,
       )
+      attach_avatar_from_url(p1, "https://res.cloudinary.com/do5pu5yu6/image/upload/v1769949178/avatar_work_w03rhg.png")
+      p1.update(team: Team.find_by(display_name: "株式会社Forestly"))
+      
+      # ルーム所属
+      ["全社連絡", "開発部", "雑談"].each do |name|
+        if room = ChatRoom.find_by(display_name: name)
+          p1.room_memberships.create!(chat_room: room)
+        end
+      end
+
+      # --- ★ここからNPCとのやり取りを追加 ---
+      tanaka = Profile.find_by(profile_id: "tanaka_mgr")
+      takahashi = Profile.find_by(profile_id: "takahashi_dev")
+      watanabe = Profile.find_by(profile_id: "watanabe_des")
+      work_team = p1.team
+
+      if tanaka && work_team
+        # 田中さんからのタスク依頼
+        task = Task.create!(describe: "次期ロードマップの資料作成（ドラフト）", task_status: 1, deadline: 3.days.from_now)
+        Activity.create!(owner_profile: tanaka, team: work_team, title: "【担当依頼】ロードマップ作成", actable: task, visibility_range: 0)
+        TaskAssignee.create!(task: task, profile: p1)
+
+        # 渡辺さんからのNote
+        note = Note.create!(body: "Forestly UIガイドライン v1.0\n共通ルールです。#Design")
+        Activity.create!(owner_profile: watanabe, team: work_team, title: "UIデザイン規約を公開", actable: note, visibility_range: 0) if watanabe
+
+        # 高橋さんからの開発部メッセージ
+        if dev_room = ChatRoom.find_by(display_name: "開発部")
+          msg = RoomMessage.create!(content: "APIの結合テストが完了しました。")
+          Activity.create!(owner_profile: takahashi, team: work_team, title: "開発進捗報告", actable: msg, chat_room_id: dev_room.id, visibility_range: 1) if takahashi
+        end
+      end
+      # --- ★ここまで ---
 
       # 2. プライベート用 (Private)
-      user.profiles.create!(
+      p2 = user.profiles.create!(
         label: "Private (個人用)",
         name: "Satomi",
         profile_id: "satomi_private_#{SecureRandom.hex(3)}",
         status: 0
       )
+      attach_avatar_from_url(p2, "https://res.cloudinary.com/do5pu5yu6/image/upload/v1769949178/avatar_private_u147ut.png")
+      ["週末キャンプ会", "焚き火好き集まれ"].each do |name|
+        if room = ChatRoom.find_by(display_name: name)
+          p2.room_memberships.create!(chat_room: room)
+        end
+      end
 
       # 3. 外部活動用 (School)
-      user.profiles.create!(
+      p3 = user.profiles.create!(
         label: "School (料理教室)",
         name: "Satomi @ Cooking",
         profile_id: "satomi_cook_#{SecureRandom.hex(3)}",
         status: 0
       )
-    end
+      attach_avatar_from_url(p3, "https://res.cloudinary.com/do5pu5yu6/image/upload/v1769949178/avatar_school_mhhxwn.png")
+      p3.update(team: Team.find_by(display_name: "ABCクッキング"))
+      ["3月生クラス", "レシピ共有"].each do |name|
+        if room = ChatRoom.find_by(display_name: name)
+          p3.room_memberships.create!(chat_room: room)
+        end
+      end
 
-    # 最初に表示するプロフィールを「Work」に設定
     guest_profile = user.profiles.find_by(label: "Work (本業)")
     session[:current_profile_id] = guest_profile.id
 
     sign_in user
-    redirect_to root_path, notice: 'guest_mode'
+    redirect_to root_path, notice: "guest_mode"
+  end
+
+  private
+
+  def attach_avatar_from_url(profile, url)
+    require "open-uri"
+    file = URI.open(url)
+    profile.avatar.attach(io: file, filename: "avatar_#{profile.label}.png")
+  rescue => e
+    logger.error "Failed to attach avatar: #{e.message}"
   end
 end-e \n--- END OF FILE ---\n
 app/controllers/users/registrations_controller.rb
@@ -4897,17 +4957,21 @@ app/helpers/application_helper.rb
 --- START OF FILE ---
 # app/helpers/application_helper.rb
 module ApplicationHelper
-  def profile_avatar_tag(profile, options = {})
+  def profile_avatar_tag(object, options = {}) # 引数名を profile から object に変えると分かりやすいです
     # デフォルトのサイズを設定
     size = options.delete(:size) || 100
     # ビューから渡された class とデフォルトの角丸スタイルを結合
     img_class = "rounded-xl object-cover #{options[:class]}"
 
-    if profile.avatar.attached?
-      image_tag profile.avatar.variant(resize_to_fill: [ size, size ]),
+    # object が avatar を持っていて、かつアタッチされているか確認
+    if object.respond_to?(:avatar) && object.avatar.attached?
+      image_tag object.avatar.variant(resize_to_fill: [size, size]),
                 options.merge(class: img_class, style: "width: #{size}px; height: #{size}px; #{options[:style]}")
     else
-      initial = profile.name.to_s[0]&.upcase || "?"
+      # name があればそれを使い、なければ display_name を使う。どちらもなければ "?"
+      name_source = object.try(:name) || object.try(:display_name)
+      initial = name_source.to_s[0]&.upcase || "?"
+      
       content_tag :div, initial,
                   options.merge(
                     class: "#{img_class} bg-gray-400 flex items-center justify-center text-white font-bold",
@@ -5176,7 +5240,7 @@ Rails.application.routes.draw do
 
   # ゲストログイン用のルーティング
   devise_scope :user do
-    post 'guest_sign_in', to: 'users/sessions#guest_sign_in'
+    post "guest_sign_in", to: "users/sessions#guest_sign_in"
   end
 end
 -e \n--- END OF FILE ---\n

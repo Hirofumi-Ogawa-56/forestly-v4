@@ -73,16 +73,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_31_071740) do
     t.index ["team_id"], name: "index_activities_on_team_id"
   end
 
-  create_table "chat_memberships", force: :cascade do |t|
-    t.integer "profile_id", null: false
-    t.integer "chat_room_id", null: false
-    t.integer "role"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["chat_room_id"], name: "index_chat_memberships_on_chat_room_id"
-    t.index ["profile_id"], name: "index_chat_memberships_on_profile_id"
-  end
-
   create_table "chat_rooms", force: :cascade do |t|
     t.string "display_name"
     t.integer "status"
@@ -127,7 +117,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_31_071740) do
   create_table "room_memberships", force: :cascade do |t|
     t.integer "profile_id", null: false
     t.integer "chat_room_id", null: false
-    t.integer "role", default: 0, null: false
+    t.integer "role"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["chat_room_id"], name: "index_room_memberships_on_chat_room_id"
@@ -230,8 +220,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_31_071740) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "chat_memberships", "chat_rooms"
-  add_foreign_key "chat_memberships", "profiles"
+  add_foreign_key "activities", "profiles", column: "owner_profile_id"
+  add_foreign_key "activities", "teams"
   add_foreign_key "profiles", "teams"
   add_foreign_key "profiles", "users"
   add_foreign_key "room_memberships", "chat_rooms"

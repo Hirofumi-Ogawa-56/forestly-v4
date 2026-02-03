@@ -1,0 +1,77 @@
+<!-- app/views/shared/_onboarding_modal.html.erb -->
+<% if flash[:notice] == "guest_mode" %>
+  <div id="onboarding-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+    <div class="relative w-[90%] max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden">
+      
+      <%# 横スクロールエリア（Tailwindのスナップ機能を使用） %>
+      <div id="onboarding-scroller" class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide h-[75vh] max-h-[600px]">
+        
+        <div class="w-full flex-shrink-0 snap-start flex items-center justify-center bg-white">
+          <%= image_tag 'forestly_introduction_p1.png', class: 'w-full h-full object-contain pointer-events-none' %>
+        </div>
+
+        <div class="w-full flex-shrink-0 snap-start flex items-center justify-center bg-white">
+          <%= image_tag 'forestly_introduction_p2.png', class: 'w-full h-full object-contain pointer-events-none' %>
+        </div>
+
+        <div class="w-full flex-shrink-0 snap-start flex flex-col bg-white">
+          <div class="flex-1 flex items-center justify-center overflow-hidden">
+            <%= image_tag 'forestly_introduction_p3.png', class: 'max-w-full max-h-full object-contain pointer-events-none' %>
+          </div>
+          <div class="w-full px-6 py-8 text-center bg-white flex-shrink-0 border-t border-gray-50">
+            <button onclick="closeOnboarding()" class="w-full py-4 bg-[#00a968] text-white text-sm sm:text-base font-bold rounded-xl hover:bg-[#008d57] transition-all shadow-md active:scale-95">
+              Forestlyをはじめる
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <%# インジケーター（簡易ドット） %>
+      <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 pointer-events-none">
+        <div id="dot-0" class="w-2 h-2 rounded-full bg-[#00a968]"></div>
+        <div id="dot-1" class="w-2 h-2 rounded-full bg-gray-300"></div>
+        <div id="dot-2" class="w-2 h-2 rounded-full bg-gray-300"></div>
+      </div>
+
+      <button onclick="closeOnboarding()" class="absolute top-4 right-4 z-[110] text-gray-400 hover:text-gray-600 p-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <style>
+    /* スクロールバーを非表示にする（モダンブラウザ対応） */
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* 横スクロールを滑らかに */
+    #onboarding-scroller {
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+  </style>
+
+  <script>
+    // ドットの連動処理
+    const scroller = document.getElementById('onboarding-scroller');
+    scroller.addEventListener('scroll', () => {
+      const index = Math.round(scroller.scrollLeft / scroller.clientWidth);
+      [0, 1, 2].forEach(i => {
+        const dot = document.getElementById(`dot-${i}`);
+        if (dot) {
+          dot.style.backgroundColor = i === index ? '#00a968' : '#D1D5DB';
+        }
+      });
+    });
+
+    function closeOnboarding() {
+      const modal = document.getElementById('onboarding-modal');
+      if (modal) modal.remove();
+      if (window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.origin + window.location.pathname);
+      }
+    }
+  </script>
+<% end %>
